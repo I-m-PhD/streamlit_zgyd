@@ -114,7 +114,7 @@ def show_statistics(all_content, data_name, crawl_time):
     df['PublishDayOfWeek'] = pd.Categorical(df['PublishDayOfWeek'], categories=day_order, ordered=True)
 
     # --- Plotting Logic (保持不变) ---
-    st.subheader("1. 每日更新频次")
+    # st.subheader("1. 每日更新频次")
     frequency_df = df.groupby(['PublishDateOnly', 'PublishDayOfWeek'], observed=True)['PublishDateTime'].count().reset_index()
     frequency_df.columns = ['PublishDate', 'PublishDayOfWeek', 'UpdateCount']
     frequency_df = frequency_df.sort_values('PublishDate')
@@ -122,7 +122,7 @@ def show_statistics(all_content, data_name, crawl_time):
     fig_freq.update_xaxes(tickangle=-45, rangeslider_visible=True, rangeselector=dict(bgcolor="#333333", activecolor="#555555", font=dict(color="white"), buttons=[dict(count=7, label="1周", step="day", stepmode="backward"), dict(count=1, label="1月", step="month", stepmode="backward"), dict(count=3, label="1季", step="month", stepmode="backward"), dict(count=1, label="1年", step="year", stepmode="backward"), dict(step="all", label="全部")]), tickformat="%Y-%m-%d")
     st.plotly_chart(fig_freq, use_container_width=True)
 
-    st.subheader("2. 更新活跃度分析")
+    # st.subheader("2. 更新活跃度分析")
     col1, col2 = st.columns(2)
     with col1:
         time_df_hour = df.groupby('PublishHour', observed=True)['PublishDateTime'].count().reset_index(name='UpdateCount')
@@ -142,7 +142,7 @@ def show_statistics(all_content, data_name, crawl_time):
 
     # --- 3. 原始数据表格 (仅限北京) ---
     if data_name == "所有招采_正在招标_北京":
-        st.subheader("3. 原始数据表")
+        # st.subheader("3. 原始数据表")
 
         required_cols_map = {
             'publishDate': '发布时间',
