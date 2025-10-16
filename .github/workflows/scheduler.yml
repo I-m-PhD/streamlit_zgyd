@@ -17,15 +17,15 @@ on:
           - TASK_2
           - TASK_3
 
-  # T1: 每天 00:00 CST (UTC 16:00)
   schedule:
+    # T1: 每天 00:00 CST (UTC 16:00)
     - cron: '0 16 * * *'
 
-    # T2: 每天 00:05, 12:05 CST (UTC 04:05, 16:05) - 错开 T1 5分钟
-    - cron: '5 4,16 * * *'
+    # T2: 每天 00:10, 12:10 CST (UTC 04:10, 16:10) - 为 T1 预留 10 分钟
+    - cron: '10 4,16 * * *'
 
-    # T3: 每小时 10, 40 分 CST (UTC 10/40 分) - 避开所有关键提交点
-    - cron: '10,40 * * * *'
+    # T3: 每小时 20, 50 分 CST (UTC 20/50 分) - 避开所有关键提交点 (00, 10, 30, 40)
+    - cron: '20,50 * * * *'
 
 permissions:
   contents: write # 授予写入权限用于提交数据
@@ -53,12 +53,12 @@ jobs:
   # T2: 任务 2 Job 定义
   # ----------------------------------------------------
   run_task_2:
-    name: "TASK 2: 正在招标 (00:05/12:05 CST)"
+    name: "TASK 2: 正在招标 (00:10/12:10 CST)"
     runs-on: ubuntu-latest
-    # 使用 contains 检查是否包含 T2 的两个 cron 表达式
     if: |
       github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2' || 
-      contains(github.event.schedule, '5 4,16 * * *')
+      github.event.schedule == '10 4 * * *' ||
+      github.event.schedule == '10 16 * * *'
 
     steps:
       - name: Execute Composite Action for TASK_2
@@ -70,11 +70,12 @@ jobs:
   # T3: 任务 3 Job 定义
   # ----------------------------------------------------
   run_task_3:
-    name: "TASK 3: 正在招标_北京 (每小时 10/40 分 CST)"
+    name: "TASK 3: 正在招标_北京 (每小时 20/50 分 CST)"
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3' || 
-      github.event.schedule == '10,40 * * * *'
+      github.event.schedule == '20 * * * *' || 
+      github.event.schedule == '50 * * * *'
 
     steps:
       - name: Execute Composite Action for TASK_3
