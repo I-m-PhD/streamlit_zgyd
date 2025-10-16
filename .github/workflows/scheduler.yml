@@ -1,89 +1,83 @@
 # .github/workflows/scheduler.yml
-# 定时任务执行时间已修正并转换为 UTC (CST - 8小时)
+# 最终版本：使用 Composite Action 避免重复代码，实现最高可靠性。
 
-name: Scheduled Data Crawler
+name: Scheduled Data Crawler - Modular
 
 on:
   # 允许手动触发所有任务
   workflow_dispatch:
+    inputs:
+      task_to_run:
+        description: 'Select the task to run manually'
+        required: true
+        type: choice
+        default: 'TASK_1'
+        options:
+          - TASK_1
+          - TASK_2
+          - TASK_3
 
-  # 任务 1 (24h - 每天 00:00 CST -> 每天 16:00 UTC)
+  # T1: 每天 00:00 CST (UTC 16:00)
   schedule:
     - cron: '0 16 * * *'
 
-    # 任务 2 (12h - 每天 00:00 和 12:00 CST -> 每天 16:00 和 04:00 UTC)
-    - cron: '0 4,16 * * *'
+    # T2: 每天 00:05, 12:05 CST (UTC 04:05, 16:05) - 错开 T1 5分钟
+    - cron: '5 4,16 * * *'
 
-    # 任务 3 (30m - 每小时 00:00 和 30:00 CST -> 每小时 00:00 和 30:00 UTC，小时偏移不影响分钟)
-    - cron: '0,30 * * * *'
+    # T3: 每小时 10, 40 分 CST (UTC 10/40 分) - 避开所有关键提交点
+    - cron: '10,40 * * * *'
 
-# 授予工作流对仓库内容（如代码和文件）的写入权限
 permissions:
-  contents: write
+  contents: write # 授予写入权限用于提交数据
 
 jobs:
-  # 辅助 Job: 设置环境 (用于依赖安装和 Python 基础配置)
-  setup_env:
+  # ----------------------------------------------------
+  # T1: 任务 1 Job 定义
+  # ----------------------------------------------------
+  run_task_1:
+    name: "TASK 1: 所有招采 (00:00 CST)"
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-    outputs:
-      repo_path: ${{ github.workspace }}
-
-  # 任务 Job 模板 (根据触发事件决定运行哪个)
-  run_crawler_task:
-    needs: setup_env
-    runs-on: ubuntu-latest
+    # 只有在 T1 的 cron 时间触发，或者手动选择 T1 时运行
+    if: |
+      github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_1' || 
+      github.event.schedule == '0 16 * * *'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # ------------------------------------------------------------------
-      # 关键修复：设置时区环境变量为 CST (Asia/Shanghai)
-      # 这样在 crawler.py 中 datetime.now() 就会获取到正确的 CST 时间
-      # ------------------------------------------------------------------
-      - name: Set Timezone to Asia/Shanghai (CST)
-        run: echo "TZ=Asia/Shanghai" >> $GITHUB_ENV
-
-      # ----------------------------------------------------
-      # 步骤 1: 运行任务 1 (每天 00:00 CST)
-      # 条件：手动触发，或 cron 完全匹配 '0 16 * * *'
-      # ----------------------------------------------------
-      - name: Run TASK 1 (24h)
-        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 16 * * *'
-        run: python crawler.py TASK_1
-
-      # ----------------------------------------------------
-      # 步骤 2: 运行任务 2 (每天 00:00 和 12:00 CST)
-      # 条件：手动触发，或 cron 匹配 '0 4,16 * * *'
-      # ----------------------------------------------------
-      - name: Run TASK 2 (12h)
-        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 4,16 * * *'
-        run: python crawler.py TASK_2
-
-      # ----------------------------------------------------
-      # 步骤 3: 运行任务 3 (每 30 分钟 CST)
-      # 条件：手动触发，或 cron 匹配 '0,30 * * * *'
-      # ----------------------------------------------------
-      - name: Run TASK 3 (30m)
-        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0,30 * * * *'
-        run: python crawler.py TASK_3
-
-      # ----------------------------------------------------
-      # 提交更新
-      # ----------------------------------------------------
-      - name: Commit and Push new data
-        uses: stefanzweifel/git-auto-commit-action@v5
+      # 调用组合操作，传入 task_name
+      - name: Execute Composite Action for TASK_1
+        uses: ./.github/actions/setup-commit-crawler
         with:
-          commit_message: "SCHEDULER: Auto-update data."
-          file_pattern: 'zgyd/*.json zgyd/metadata.json'
-          commit_user_name: 'github-actions[bot]'
-          commit_user_email: 'github-actions[bot]@users.noreply.github.com'
+          task_name: TASK_1
+
+  # ----------------------------------------------------
+  # T2: 任务 2 Job 定义
+  # ----------------------------------------------------
+  run_task_2:
+    name: "TASK 2: 正在招标 (00:05/12:05 CST)"
+    runs-on: ubuntu-latest
+    # 使用 contains 检查是否包含 T2 的两个 cron 表达式
+    if: |
+      github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2' || 
+      contains(github.event.schedule, '5 4,16 * * *')
+
+    steps:
+      - name: Execute Composite Action for TASK_2
+        uses: ./.github/actions/setup-commit-crawler
+        with:
+          task_name: TASK_2
+
+  # ----------------------------------------------------
+  # T3: 任务 3 Job 定义
+  # ----------------------------------------------------
+  run_task_3:
+    name: "TASK 3: 正在招标_北京 (每小时 10/40 分 CST)"
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3' || 
+      github.event.schedule == '10,40 * * * *'
+
+    steps:
+      - name: Execute Composite Action for TASK_3
+        uses: ./.github/actions/setup-commit-crawler
+        with:
+          task_name: TASK_3
