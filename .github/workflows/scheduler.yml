@@ -1,16 +1,20 @@
 # .github/workflows/scheduler.yml
+# 定时任务执行时间已修正并转换为 UTC (CST - 8小时)
 
 name: Scheduled Data Crawler
 
 on:
   # 允许手动触发所有任务
   workflow_dispatch:
-  # 任务 1: 每天 00:00 执行
+
+  # 任务 1 (24h - 每天 00:00 CST -> 每天 16:00 UTC)
   schedule:
-    - cron: '0 0 * * *'
-    # 任务 2: 每天 00:00 和 12:00 执行
-    - cron: '0 0,12 * * *'
-    # 任务 3: 每小时的 0 分和 30 分执行
+    - cron: '0 16 * * *'
+
+    # 任务 2 (12h - 每天 00:00 和 12:00 CST -> 每天 16:00 和 04:00 UTC)
+    - cron: '0 4,16 * * *'
+
+    # 任务 3 (30m - 每小时 00:00 和 30:00 CST -> 每小时 00:00 和 30:00 UTC，小时偏移不影响分钟)
     - cron: '0,30 * * * *'
 
 # 授予工作流对仓库内容（如代码和文件）的写入权限
@@ -18,9 +22,7 @@ permissions:
   contents: write
 
 jobs:
-  # ----------------------------------------------------
   # 辅助 Job: 设置环境 (用于依赖安装和 Python 基础配置)
-  # ----------------------------------------------------
   setup_env:
     runs-on: ubuntu-latest
     steps:
@@ -32,42 +34,40 @@ jobs:
           python-version: '3.10'
       - name: Install dependencies
         run: pip install -r requirements.txt
-    # 定义输出，供后续 Job 引用
     outputs:
       repo_path: ${{ github.workspace }}
 
-  # ----------------------------------------------------
   # 任务 Job 模板 (根据触发事件决定运行哪个)
-  # ----------------------------------------------------
   run_crawler_task:
     needs: setup_env
     runs-on: ubuntu-latest
-    # 策略：如果事件是 'schedule' 或 'workflow_dispatch'，则执行。
-    # 我们使用 if 条件来区分是哪个 cron 触发了运行。
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       # ----------------------------------------------------
-      # 步骤 1: 运行任务 1 (每天 00:00)
+      # 步骤 1: 运行任务 1 (每天 00:00 CST)
+      # 条件：手动触发，或 cron 完全匹配 '0 16 * * *'
       # ----------------------------------------------------
       - name: Run TASK 1 (24h)
-        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 * * *'
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 16 * * *'
         run: python crawler.py TASK_1
 
       # ----------------------------------------------------
-      # 步骤 2: 运行任务 2 (每天 00:00 和 12:00)
+      # 步骤 2: 运行任务 2 (每天 00:00 和 12:00 CST)
+      # 条件：手动触发，或 cron 匹配 '0 4,16 * * *'
       # ----------------------------------------------------
       - name: Run TASK 2 (12h)
-        if: github.event_name == 'workflow_dispatch' || contains(github.event.schedule, '0,12 * * *') || github.event.schedule == '0 12 * * *'
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 4,16 * * *'
         run: python crawler.py TASK_2
 
       # ----------------------------------------------------
-      # 步骤 3: 运行任务 3 (每 30 分钟)
+      # 步骤 3: 运行任务 3 (每 30 分钟 CST)
+      # 条件：手动触发，或 cron 匹配 '0,30 * * * *'
       # ----------------------------------------------------
       - name: Run TASK 3 (30m)
-        if: github.event_name == 'workflow_dispatch' || contains(github.event.schedule, '0,30 * * * *')
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0,30 * * * *'
         run: python crawler.py TASK_3
 
       # ----------------------------------------------------
