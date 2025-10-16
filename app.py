@@ -73,7 +73,7 @@ def show_statistics(all_content, data_name, crawl_time):
         else:
             st.caption("当前总记录数：**0** 条 (等待首次采集)")
 
-    st.markdown("---")
+    # st.markdown("---")
     # ---------------------------------------------------------
 
     if not all_content:
