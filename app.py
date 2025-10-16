@@ -249,7 +249,8 @@ def show_statistics(all_content, data_name, crawl_time, is_manual_task=True): # 
 
     df['PublishDateOnly'] = df['PublishDateTime'].dt.date
     df['PublishHour'] = df['PublishDateTime'].dt.hour
-    df['PublishDayOfWeek'] = df['PublishDateTime'].dt.day_name(locale='en_GB')
+    # df['PublishDayOfWeek'] = df['PublishDateTime'].dt.day_name(locale='en_GB')
+    df['PublishDayOfWeek'] = df['PublishDateTime'].dt.day_name()
     day_map = {'Monday': '周一', 'Tuesday': '周二', 'Wednesday': '周三', 'Thursday': '周四', 'Friday': '周五', 'Saturday': '周六', 'Sunday': '周日'}
     df['PublishDayOfWeek'] = df['PublishDayOfWeek'].map(day_map)
     day_order = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
