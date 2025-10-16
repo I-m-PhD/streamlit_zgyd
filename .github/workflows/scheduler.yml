@@ -46,6 +46,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ------------------------------------------------------------------
+      # 关键修复：设置时区环境变量为 CST (Asia/Shanghai)
+      # 这样在 crawler.py 中 datetime.now() 就会获取到正确的 CST 时间
+      # ------------------------------------------------------------------
+      - name: Set Timezone to Asia/Shanghai (CST)
+        run: echo "TZ=Asia/Shanghai" >> $GITHUB_ENV
+
       # ----------------------------------------------------
       # 步骤 1: 运行任务 1 (每天 00:00 CST)
       # 条件：手动触发，或 cron 完全匹配 '0 16 * * *'
