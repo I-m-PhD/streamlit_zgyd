@@ -49,7 +49,7 @@ pio.templates.default = "plotly_dark"
 def show_statistics(all_content, data_name, crawl_time):
 
     st.markdown("---")
-    st.header(f"数据分析: {data_name}")
+    st.header(f"{data_name}")
 
     # 获取记录总数
     record_count = len(all_content) if all_content is not None else 0
@@ -60,14 +60,14 @@ def show_statistics(all_content, data_name, crawl_time):
     col_time, col_count = st.columns([2, 1])
 
     with col_time:
-        st.subheader("采集状态")
+        # st.subheader("采集状态")
         if crawl_time:
             st.caption(f"上次采集时间：**{crawl_time}** (由 GitHub Action 定时更新)")
         else:
             st.caption("上次采集时间：**无记录** (由 GitHub Action 定时更新)")
 
     with col_count:
-        st.subheader("数据量")
+#         st.subheader("数据量")
         if record_count > 0:
             st.caption(f"当前总记录数：**{record_count}** 条")
         else:
@@ -176,7 +176,7 @@ def main():
         initial_sidebar_state="collapsed"
     )
 
-    st.title("📡 中国移动招采平台数据监控")
+    st.title("📡 招采数据监控")
     st.info("所有数据集均通过 GitHub Actions 定时更新。")
 
     metadata = load_metadata()
