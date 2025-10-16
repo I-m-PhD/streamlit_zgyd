@@ -1,7 +1,6 @@
 # crawler.py
-# 此文件仅负责定时采集第三个数据集
 
-import random, requests, ssl, time, json, os
+import random, requests, ssl, time, json, os, sys
 from requests.adapters import HTTPAdapter
 from datetime import datetime
 
@@ -11,26 +10,25 @@ POST_URL = f'{BASE_URL}/api-b2b/api-sync-es/white_list_api/b2b/publish/queryList
 OUTPUT_DIR = "./zgyd"
 METADATA_PATH = os.path.join(OUTPUT_DIR, "metadata.json")
 
+# 定义所有需要采集的任务配置
 TASK_CONFIG = {
-    "所有招采": {"payload": {}, "name": "所有招采"},
-    "正在招标": {"payload": {"homePageQueryType": "Bidding"}, "name": "所有招采_正在招标"},
-    "正在招标 (北京)": {"payload": {"homePageQueryType": "Bidding", "companyType": "BJ"}, "name": "所有招采_正在招标_北京"},
+    "TASK_1": {"payload": {}, "name": "所有招采"},
+    "TASK_2": {"payload": {"homePageQueryType": "Bidding"}, "name": "所有招采_正在招标"},
+    "TASK_3": {"payload": {"homePageQueryType": "Bidding", "companyType": "BJ"}, "name": "所有招采_正在招标_北京"},
 }
-# 仅执行第三个任务
-TARGET_TASK_KEY = "正在招标 (北京)"
 
-
-# --- UTILITIES (必须包含在爬虫脚本内) ---
+# --- UTILITIES ---
 
 USER_AGENTS = [
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15",
-    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36 OPR/26.0.1656.60",
-    "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko",
-    "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0; HTC; Titan)",
-    "MQQBrowser/26 Mozilla/5.0 (Linux; U; Android 2.3.7; zh-cn; MB200 Build/GRJ22; CyanogenMod-7) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1",
-    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 UBrowser/4.0.3214.0 Safari/537.36",
-    "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E; LBBROWSER)",
-] * 10
+                  # 截断列表以保持简洁
+                  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15",
+                  "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36 OPR/26.0.1656.60",
+                  "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko",
+                  "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0; HTC; Titan)",
+                  "MQQBrowser/26 Mozilla/5.0 (Linux; U; Android 2.3.7; zh-cn; MB200 Build/GRJ22; CyanogenMod-7) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1",
+                  "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 UBrowser/4.0.3214.0 Safari/537.36",
+                  "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E; LBBROWSER)",
+              ] * 10
 
 def get_random_headers():
     return {
@@ -63,8 +61,9 @@ def save_metadata(metadata):
     with open(METADATA_PATH, 'w', encoding='utf-8') as f:
         json.dump(metadata, f, indent=4, ensure_ascii=False)
 
+# 简化版的 scrape_content，使用 print 代替 Streamlit status_placeholder
 def scrape_content(payload_override, output_name):
-
+    # ... (与之前版本中的 scrape_content 逻辑保持一致，使用 print 打印状态) ...
     base_payload = {
         "size": 100, "current": 1, "companyType": "", "name": "",
         "publishType": "PROCUREMENT", "publishOneType": "PROCUREMENT",
@@ -137,13 +136,17 @@ def scrape_content(payload_override, output_name):
     else:
         return False
 
-
 # --- MAIN CRAWLER LOGIC ---
 
-def run_crawler_job():
-    # 仅执行第三个任务
-    config = TASK_CONFIG[TARGET_TASK_KEY]
+def run_crawler_job(task_key):
+    if task_key not in TASK_CONFIG:
+        print(f"错误：无效的任务键 '{task_key}'。")
+        return
+
+    config = TASK_CONFIG[task_key]
     task_name = config["name"]
+
+    print(f"任务键: {task_key}，目标数据集: {task_name}")
 
     success = scrape_content(config["payload"], task_name)
 
@@ -151,6 +154,12 @@ def run_crawler_job():
         metadata = load_metadata()
         metadata[task_name] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_metadata(metadata)
+        print(f"元数据已更新。")
 
 if __name__ == "__main__":
-    run_crawler_job()
+    if len(sys.argv) > 1:
+        # 从命令行参数获取任务键
+        task_key_to_run = sys.argv[1]
+        run_crawler_job(task_key_to_run)
+    else:
+        print("错误：请提供任务键作为命令行参数 (例如: python crawler.py TASK_1)")

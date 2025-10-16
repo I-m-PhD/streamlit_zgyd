@@ -1,46 +1,82 @@
 # .github/workflows/scheduler.yml
-# 此文件确保每 30 分钟触发 crawler.py
 
 name: Scheduled Data Crawler
 
 on:
-  # 定时任务：每 30 分钟执行一次 (每小时的 0 分和 30 分)
-  schedule:
-    - cron: '0,30 * * * *'
-  # 允许手动触发
+  # 允许手动触发所有任务
   workflow_dispatch:
+  # 任务 1: 每天 00:00 执行
+  schedule:
+    - cron: '0 0 * * *'
+    # 任务 2: 每天 00:00 和 12:00 执行
+    - cron: '0 0,12 * * *'
+    # 任务 3: 每小时的 0 分和 30 分执行
+    - cron: '0,30 * * * *'
 
+# 授予工作流对仓库内容（如代码和文件）的写入权限
 permissions:
   contents: write
 
 jobs:
-  crawl_job:
+  # ----------------------------------------------------
+  # 辅助 Job: 设置环境 (用于依赖安装和 Python 基础配置)
+  # ----------------------------------------------------
+  setup_env:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+    # 定义输出，供后续 Job 引用
+    outputs:
+      repo_path: ${{ github.workspace }}
+
+  # ----------------------------------------------------
+  # 任务 Job 模板 (根据触发事件决定运行哪个)
+  # ----------------------------------------------------
+  run_crawler_task:
+    needs: setup_env
+    runs-on: ubuntu-latest
+    # 策略：如果事件是 'schedule' 或 'workflow_dispatch'，则执行。
+    # 我们使用 if 条件来区分是哪个 cron 触发了运行。
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.13.5'
+      # ----------------------------------------------------
+      # 步骤 1: 运行任务 1 (每天 00:00)
+      # ----------------------------------------------------
+      - name: Run TASK 1 (24h)
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 * * *'
+        run: python crawler.py TASK_1
 
-      - name: Install dependencies
-        run: |
-          # 安装 requirements.txt 中列出的所有依赖
-          pip install -r requirements.txt 
+      # ----------------------------------------------------
+      # 步骤 2: 运行任务 2 (每天 00:00 和 12:00)
+      # ----------------------------------------------------
+      - name: Run TASK 2 (12h)
+        if: github.event_name == 'workflow_dispatch' || contains(github.event.schedule, '0,12 * * *') || github.event.schedule == '0 12 * * *'
+        run: python crawler.py TASK_2
 
-      - name: Run Crawler Script
-        run: python crawler.py
+      # ----------------------------------------------------
+      # 步骤 3: 运行任务 3 (每 30 分钟)
+      # ----------------------------------------------------
+      - name: Run TASK 3 (30m)
+        if: github.event_name == 'workflow_dispatch' || contains(github.event.schedule, '0,30 * * * *')
+        run: python crawler.py TASK_3
 
+      # ----------------------------------------------------
+      # 提交更新
+      # ----------------------------------------------------
       - name: Commit and Push new data
-        # 使用 git-auto-commit-action 来自动提交更新的文件
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "SCHEDULER: Update '正在招标 (北京)' data via Action."
-          # 仅提交更新的 JSON 文件和 metadata 文件
+          commit_message: "SCHEDULER: Auto-update data."
           file_pattern: 'zgyd/*.json zgyd/metadata.json'
-          # 设置提交用户和邮箱，避免权限问题
           commit_user_name: 'github-actions[bot]'
           commit_user_email: 'github-actions[bot]@users.noreply.github.com'
