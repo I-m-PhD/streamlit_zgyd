@@ -1,4 +1,4 @@
-# zgyd_app.py
+# app.py
 # 此文件用于手动采集前两个数据集
 
 import streamlit as st
@@ -80,7 +80,7 @@ def save_metadata(metadata):
 
 def scrape_content(payload_override, output_name, status_placeholder):
     """
-    Scrapes data and saves it to a local JSON file. (和 zgyd_crawler.py 中保持一致)
+    Scrapes data and saves it to a local JSON file. (和 crawler.py 中保持一致)
     """
 
     # Base Payload structure (defaults)

@@ -1,5 +1,5 @@
-# .github/workflows/zgyd_scheduler.yml
-# 此文件确保每 30 分钟触发 zgyd_crawler.py
+# .github/workflows/scheduler.yml
+# 此文件确保每 30 分钟触发 crawler.py
 
 name: Scheduled Data Crawler
 
@@ -29,7 +29,7 @@ jobs:
           pip install -r requirements.txt 
 
       - name: Run Crawler Script
-        run: python zgyd_crawler.py
+        run: python crawler.py
 
       - name: Commit and Push new data
         # 使用 git-auto-commit-action 来自动提交更新的文件

@@ -1,4 +1,4 @@
-# zgyd_crawler.py
+# crawler.py
 # 此文件仅负责定时采集第三个数据集
 
 import random, requests, ssl, time, json, os
