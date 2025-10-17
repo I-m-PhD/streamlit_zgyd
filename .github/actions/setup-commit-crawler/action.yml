@@ -11,14 +11,14 @@ runs:
   steps:
     # 1. 设置 Python 版本
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.13'
 
     # 2. 关键优化：缓存 Python 依赖
     # 如果 requirements.txt 文件内容不变，则命中缓存，极大地减少安装时间。
     - name: Cache Python dependencies (pip cache)
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         # 缓存路径：默认的 Python site-packages 目录
         path: ${{ env.pythonLocation }}/lib/python*/site-packages
