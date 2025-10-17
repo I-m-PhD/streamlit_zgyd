@@ -21,6 +21,6 @@ jobs:
           # 必须使用具有 'workflow' 范围的 PAT 或 GITHUB_TOKEN 并授予 'actions: write' 权限
           token: ${{ secrets.GITHUB_TOKEN }}
           # 仅保留最近 7 天的运行记录
-          retain_days: 7
+          retain_days: 0
           # 每个工作流最少保留的运行次数
-          keep_minimum_runs: 3
+          keep_minimum_runs: 0
