@@ -1,7 +1,7 @@
 # .github/workflows/scheduler.yml
 # 最终版本：使用 Composite Action 避免重复代码，实现最高可靠性。
 
-name: Scheduled Data Crawler - Modular
+name: Scheduled Crawler
 
 on:
   # 允许手动触发所有任务
