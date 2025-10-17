@@ -57,8 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2') || 
-      (github.event.schedule == '10 4 * * *') || 
-      (github.event.schedule == '10 16 * * *')
+      (github.event.schedule == '10 4,16 * * *')
 
     steps:
       - name: Checkout code for Local Action Access
@@ -77,8 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3') || 
-      (github.event.schedule == '20 * * * *') || 
-      (github.event.schedule == '50 * * * *')
+      (github.event.schedule == '20,50 * * * *')
 
     steps:
       - name: Checkout code for Local Action Access
