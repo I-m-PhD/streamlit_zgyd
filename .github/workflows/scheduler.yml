@@ -42,7 +42,7 @@ jobs:
     steps:
       # 关键：先检出代码，确保本地 Composite Action 可访问
       - name: Checkout code for Local Action Access
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Execute Composite Action for TASK_1
         uses: ./.github/actions/setup-commit-crawler
@@ -62,7 +62,7 @@ jobs:
 
     steps:
       - name: Checkout code for Local Action Access
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Execute Composite Action for TASK_2
         uses: ./.github/actions/setup-commit-crawler
@@ -82,7 +82,7 @@ jobs:
 
     steps:
       - name: Checkout code for Local Action Access
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Execute Composite Action for TASK_3
         uses: ./.github/actions/setup-commit-crawler
