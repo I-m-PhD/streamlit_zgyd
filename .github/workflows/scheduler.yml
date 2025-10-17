@@ -39,8 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     # 只有在 T1 的 cron 时间触发，或者手动选择 T1 时运行
     if: |
-      github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_1' || 
-      github.event.schedule == '0 16 * * *'
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_1') || 
+      (github.event.schedule == '0 16 * * *')
 
     steps:
       # 调用组合操作，传入 task_name
@@ -56,9 +56,9 @@ jobs:
     name: "TASK 2: 正在招标 (00:10/12:10 CST)"
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2' || 
-      github.event.schedule == '10 4 * * *' ||
-      github.event.schedule == '10 16 * * *'
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2') || 
+      (github.event.schedule == '10 4 * * *') || 
+      (github.event.schedule == '10 16 * * *')
 
     steps:
       - name: Execute Composite Action for TASK_2
@@ -73,9 +73,9 @@ jobs:
     name: "TASK 3: 正在招标_北京 (每小时 20/50 分 CST)"
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3' || 
-      github.event.schedule == '20 * * * *' || 
-      github.event.schedule == '50 * * * *'
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3') || 
+      (github.event.schedule == '20 * * * *') || 
+      (github.event.schedule == '50 * * * *')
 
     steps:
       - name: Execute Composite Action for TASK_3
