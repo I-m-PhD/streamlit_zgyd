@@ -1,23 +1,19 @@
 name: 'Setup, Run Crawler, and Commit Data'
 description: 'Sets up environment, runs the specified crawler task, and commits the results.'
 
-# 定义输入参数：我们只接收一个 task_name，如 TASK_1, TASK_2, TASK_3
 inputs:
   task_name:
     description: 'The name of the crawler task to run (e.g., TASK_1)'
+    required: true
+  # 接收 GITHUB_TOKEN，用于后续的 stefanzweifel/git-auto-commit-action
+  github_token:
+    description: 'The GITHUB_TOKEN for committing changes'
     required: true
 
 runs:
   using: "composite"
   steps:
-    # 1. Checkout code
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        # 必须使用 token，因为后续需要推送到仓库
-        token: ${{ github.token }}
-
-    # 2. Set up Python and Install dependencies (假设 requirements.txt 在根目录)
+    # 1. 设置 Python 和依赖 (由调用 Job 检出代码后，此处可以直接使用)
     - name: Set up Python and Install dependencies
       uses: actions/setup-python@v4
       with:
@@ -27,18 +23,17 @@ runs:
       shell: bash
       run: pip install -r requirements.txt
 
-    # 3. 最佳实践：时区修正
+    # 2. 最佳实践：时区修正
     - name: Set Timezone to Asia/Shanghai (CST)
       shell: bash
       run: echo "TZ=Asia/Shanghai" >> $GITHUB_ENV
 
-    # 4. 核心：运行爬虫
+    # 3. 核心：运行爬虫
     - name: Run Crawler for ${{ inputs.task_name }}
       shell: bash
-      # 注意：我们必须在 run 之前设置 shell，这是 Composite Action 的要求
       run: python crawler.py ${{ inputs.task_name }}
 
-    # 5. 最佳实践：原子性提交（使用 push-options 处理并发）
+    # 4. 原子性提交
     - name: Commit and Push new data
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
@@ -46,5 +41,7 @@ runs:
         file_pattern: 'zgyd/*.json zgyd/metadata.json'
         commit_user_name: 'github-actions[bot]'
         commit_user_email: 'github-actions[bot]@users.noreply.github.com'
-        # 关键修复：允许拉取并合并，解决 non-fast-forward 错误
+        # 使用从 inputs 传入的 token
+        token: ${{ inputs.github_token }}
+        # 关键修复：解决并发 push 冲突
         push_options: '--force-with-lease'

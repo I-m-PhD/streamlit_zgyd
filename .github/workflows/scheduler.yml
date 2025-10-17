@@ -1,6 +1,3 @@
-# .github/workflows/scheduler.yml
-# 最终版本：使用 Composite Action 避免重复代码，实现最高可靠性。
-
 name: Scheduled Crawler
 
 on:
@@ -16,19 +13,19 @@ on:
           - TASK_1
           - TASK_2
           - TASK_3
-
+  
+  # T1: 每天 00:00 CST (UTC 16:00)
   schedule:
-    # T1: 每天 00:00 CST (UTC 16:00)
     - cron: '0 16 * * *'
 
     # T2: 每天 00:10, 12:10 CST (UTC 04:10, 16:10) - 为 T1 预留 10 分钟
     - cron: '10 4,16 * * *'
 
-    # T3: 每小时 20, 50 分 CST (UTC 20/50 分) - 避开所有关键提交点 (00, 10, 30, 40)
+    # T3: 每小时 20, 50 分 CST (UTC 20/50 分) - 避开所有关键提交点
     - cron: '20,50 * * * *'
 
 permissions:
-  contents: write # 授予写入权限用于提交数据
+  contents: write # 授予写入权限用于提交数据 (用于 git-auto-commit-action)
 
 jobs:
   # ----------------------------------------------------
@@ -37,17 +34,21 @@ jobs:
   run_task_1:
     name: "TASK 1: 所有招采 (00:00 CST)"
     runs-on: ubuntu-latest
-    # 只有在 T1 的 cron 时间触发，或者手动选择 T1 时运行
+    # 使用括号确保逻辑优先级正确，并使用精确匹配防止跳过
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_1') || 
       (github.event.schedule == '0 16 * * *')
 
     steps:
-      # 调用组合操作，传入 task_name
+      # 关键：先检出代码，确保本地 Composite Action 可访问
+      - name: Checkout code for Local Action Access
+        uses: actions/checkout@v4
+
       - name: Execute Composite Action for TASK_1
         uses: ./.github/actions/setup-commit-crawler
         with:
           task_name: TASK_1
+          github_token: ${{ secrets.GITHUB_TOKEN }} # 传递 token
 
   # ----------------------------------------------------
   # T2: 任务 2 Job 定义
@@ -61,10 +62,14 @@ jobs:
       (github.event.schedule == '10 16 * * *')
 
     steps:
+      - name: Checkout code for Local Action Access
+        uses: actions/checkout@v4
+
       - name: Execute Composite Action for TASK_2
         uses: ./.github/actions/setup-commit-crawler
         with:
           task_name: TASK_2
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   # ----------------------------------------------------
   # T3: 任务 3 Job 定义
@@ -78,7 +83,11 @@ jobs:
       (github.event.schedule == '50 * * * *')
 
     steps:
+      - name: Checkout code for Local Action Access
+        uses: actions/checkout@v4
+
       - name: Execute Composite Action for TASK_3
         uses: ./.github/actions/setup-commit-crawler
         with:
           task_name: TASK_3
+          github_token: ${{ secrets.GITHUB_TOKEN }}
