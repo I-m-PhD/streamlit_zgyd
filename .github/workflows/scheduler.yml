@@ -14,14 +14,14 @@ on:
           - TASK_2
           - TASK_3
   
-  # T1: 每天 00:00 CST (UTC 16:00)
   schedule:
+    # T1: 每日 00:00 CST (UTC 16:00)
     - cron: '0 16 * * *'
 
-    # T2: 每天 00:10, 12:10 CST (UTC 04:10, 16:10) - 为 T1 预留 10 分钟
+    # T2: 每日 00:10, 12:10 CST (UTC 04:10, 16:10) - 为 T1 预留 10 分钟
     - cron: '10 4,16 * * *'
 
-    # T3: 每小时 20, 50 分 CST (UTC 20/50 分) - 避开所有关键提交点
+    # T3: 每时 20, 50 分 CST (UTC 20/50 分) - 避开所有关键提交点
     - cron: '20,50 * * * *'
 
 permissions:
@@ -32,7 +32,7 @@ jobs:
   # T1: 任务 1 Job 定义
   # ----------------------------------------------------
   run_task_1:
-    name: "TASK 1: 所有招采 (00:00 CST)"
+    name: "TASK 1: 所有招采 (每日 00:00 CST)"
     runs-on: ubuntu-latest
     # 使用括号确保逻辑优先级正确，并使用精确匹配防止跳过
     if: |
@@ -53,7 +53,7 @@ jobs:
   # T2: 任务 2 Job 定义
   # ----------------------------------------------------
   run_task_2:
-    name: "TASK 2: 正在招标 (00:10/12:10 CST)"
+    name: "TASK 2: 正在招标 (每日 00:10/12:10 CST)"
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2') || 
@@ -73,7 +73,7 @@ jobs:
   # T3: 任务 3 Job 定义
   # ----------------------------------------------------
   run_task_3:
-    name: "TASK 3: 正在招标_北京 (每小时 20/50 分 CST)"
+    name: "TASK 3: 正在招标_北京 (每时 20/50 分 CST)"
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3') || 

@@ -1,4 +1,4 @@
-name: Clean Up Old Workflow Runs
+name: Clean Up Old Runs
 
 on:
   workflow_dispatch: # 允许手动运行
@@ -21,6 +21,6 @@ jobs:
           # 必须使用具有 'workflow' 范围的 PAT 或 GITHUB_TOKEN 并授予 'actions: write' 权限
           token: ${{ secrets.GITHUB_TOKEN }}
           # 仅保留最近 7 天的运行记录
-          retain_days: 0
+          retain_days: 7
           # 每个工作流最少保留的运行次数
-          keep_minimum_runs: 0
+          keep_minimum_runs: 3
