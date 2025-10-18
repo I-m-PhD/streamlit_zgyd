@@ -1,0 +1,35 @@
+# .github/workflows/cloudflare.yml
+
+name: Deploy Cloudflare Worker Scheduler
+
+on:
+  push:
+    branches:
+      - main  
+    paths:
+      - 'worker/**'     # 监控 Worker 脚本文件夹
+      - 'wrangler.toml' # 监控 Worker 配置文件（包含 Cron 表达式）
+  workflow_dispatch: # 允许手动触发部署
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy Worker and Inject Secrets
+        uses: cloudflare/wrangler-action@v3
+        with:
+          # 认证信息来自 GitHub Secrets
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # 告诉 Wrangler 配置文件在根目录
+          workingDirectory: ./
+          
+          # 安全注入 Worker 运行时的 Secrets
+          # WORKER_GITHUB_PAT 的值将被安全地注入到 Worker 的运行时环境中 (env.WORKER_GITHUB_PAT)
+          secrets: |
+            WORKER_GITHUB_PAT
+        env:
+          WORKER_GITHUB_PAT: ${{ secrets.WORKER_GITHUB_PAT }}

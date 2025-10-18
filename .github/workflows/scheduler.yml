@@ -3,11 +3,15 @@
 name: Scheduled Crawler
 
 on:
-  # 允许手动触发所有任务
+  # ----------------------------------------------------
+  # 核心修改：移除原生的 'schedule' 触发器。
+  # Cloudflare Worker 将通过下面的 'workflow_dispatch' 触发器来替代它。
+  # ----------------------------------------------------
   workflow_dispatch:
     inputs:
+      # 此名称必须与 worker/index.js 中传递的参数名一致
       task_to_run:
-        description: 'Select the task to run manually'
+        description: 'Scheduled Task ID (TASK_1, TASK_2, or TASK_3) or Manual Run'
         required: true
         type: choice
         default: 'TASK_1'
@@ -15,34 +19,21 @@ on:
           - TASK_1
           - TASK_2
           - TASK_3
-  
-  schedule:
-    # T1: 每日 06:00 CST (UTC 22:00)
-    - cron: '0 22 * * *' 
-    
-    # T2: 每日 06:10-22:10 CST (每 4 小时一次，比 T1 晚 10 分钟。UTC 02:10, 06:10, 10:10, 14:10, 22:10)
-    - cron: '10 2,6,10,14,22 * * *' 
-
-    # T3: 每日 06:15-23:45 CST (每 30 分钟一次，比 T1 晚 15 分钟。UTC 15, 45 分，小时范围 0-15 和 22-23)
-    - cron: '15,45 0-15,22-23 * * *'
 
 permissions:
   contents: write # 授予写入权限用于提交数据 (用于 git-auto-commit-action)
 
 jobs:
   # ----------------------------------------------------
-  # T1: 任务 1 Job 定义
+  # T1: 任务 1 Job 定义 (每日 06:00 CST)
   # ----------------------------------------------------
   run_task_1:
-    name: "TASK 1: 所有招采 (每日 06:00 CST)"
+    name: "TASK 1: 所有招采"
     runs-on: ubuntu-latest
-    # 使用括号确保逻辑优先级正确，并使用精确匹配防止跳过
-    if: |
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_1') || 
-      (github.event.schedule == '0 22 * * *')
+    # 核心修改：if 条件现在仅依赖 workflow_dispatch 传入的参数。
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_1'
 
     steps:
-      # 关键：先检出代码，确保本地 Composite Action 可访问
       - name: Checkout code for Local Action Access
         uses: actions/checkout@v5
 
@@ -52,14 +43,13 @@ jobs:
           task_name: TASK_1
 
   # ----------------------------------------------------
-  # T2: 任务 2 Job 定义
+  # T2: 任务 2 Job 定义 (每 4 小时一次)
   # ----------------------------------------------------
   run_task_2:
-    name: "TASK 2: 正在招标 (每 4 小时一次, 06:10 CST 首次执行)"
+    name: "TASK 2: 正在招标"
     runs-on: ubuntu-latest
-    if: |
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2') || 
-      (github.event.schedule == '10 2,6,10,14,22 * * *')
+    # 核心修改：if 条件现在仅依赖 workflow_dispatch 传入的参数。
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2'
 
     steps:
       - name: Checkout code for Local Action Access
@@ -71,14 +61,13 @@ jobs:
           task_name: TASK_2
 
   # ----------------------------------------------------
-  # T3: 任务 3 Job 定义
+  # T3: 任务 3 Job 定义 (每 30 分钟一次)
   # ----------------------------------------------------
   run_task_3:
-    name: "TASK 3: 正在招标_北京 (每 30 分钟一次, 06:15 CST 首次执行)"
+    name: "TASK 3: 正在招标_北京"
     runs-on: ubuntu-latest
-    if: |
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3') || 
-      (github.event.schedule == '15,45 0-15,22-23 * * *')
+    # 核心修改：if 条件现在仅依赖 workflow_dispatch 传入的参数。
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3'
 
     steps:
       - name: Checkout code for Local Action Access

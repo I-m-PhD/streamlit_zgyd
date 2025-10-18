@@ -1,0 +1,24 @@
+# wrangler.toml
+
+name = "streamlit-zgyd-cron-scheduler"
+main = "worker/index.js"
+compatibility_date = "2024-01-01" 
+
+# =========================================================================
+# Cron Triggers - 必须与 worker/index.js 中的映射表匹配
+# =========================================================================
+[triggers]
+crons = [
+  "0 19 * * 0",                # cleaner.yml:            每周日 UTC 19:00
+  "0 22 * * *",                # scheduler.yml (TASK_1): 每日   UTC 22:00
+  "10 2,6,10,14,18,22 * * *",  # scheduler.yml (TASK_2): 每时   UTC 10分
+  "15,45 0-15,22-23 * * *",    # scheduler.yml (TASK_3): 每时   UTC 15/45分
+]
+
+# =========================================================================
+# Worker 运行时环境变量 (非敏感信息)
+# =========================================================================
+[vars]
+GITHUB_OWNER = "I-m-PhD"
+GITHUB_REPO = "streamlit_zgyd"
+TARGET_BRANCH = "main"
