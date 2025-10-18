@@ -200,7 +200,7 @@ def main():
         crawl_time = metadata.get(task_name)
         raw_data = load_data(task_name)
 
-        show_statistics(raw_data, task_name, crawl_time)
+        show_statistics(raw_data, task_name, crawl_time, task_key)
 
 
 if __name__ == "__main__":
