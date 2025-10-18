@@ -33,5 +33,5 @@ jobs:
           # WORKER_GITHUB_PAT 的值将被安全地注入到 Worker 的运行时环境中 (env.WORKER_GITHUB_PAT)
           secrets: |
             WORKER_GITHUB_PAT
-        env:
-          WORKER_GITHUB_PAT: ${{ secrets.WORKER_GITHUB_PAT }}
+        # env:
+        #   WORKER_GITHUB_PAT: ${{ secrets.WORKER_GITHUB_PAT }}
