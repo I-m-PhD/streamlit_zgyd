@@ -73,16 +73,16 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     with col_time:
         # st.subheader("采集状态")
         if crawl_time:
-            st.caption(f"上次采集时间: __{crawl_time}__  [{schedule_text}]")
+            st.caption(f"上次采集时间: {crawl_time} <-- [{schedule_text}]")
         else:
-            st.caption(f"上次采集时间: __无记录__  [{schedule_text}]")
+            st.caption(f"上次采集时间: 无记录 <-- [{schedule_text}]")
 
     with col_count:
 #         st.subheader("数据量")
         if record_count > 0:
-            st.caption(f"当前总记录数: __{record_count}__ 条")
+            st.caption(f"当前总记录数: {record_count} 条")
         else:
-            st.caption("当前总记录数: __0__ 条 (等待首次采集)")
+            st.caption("当前总记录数: 0 条 (等待首次采集)")
 
     # st.markdown("---")
     # ---------------------------------------------------------
