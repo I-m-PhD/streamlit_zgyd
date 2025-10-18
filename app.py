@@ -68,14 +68,17 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     # 动态获取更新计划描述
     schedule_text = TASK_UPDATE_SCHEDULES.get(task_key, "由 GitHub Action 定时更新")
 
-    col_time, col_count = st.columns([2, 1])
+    col_time, col_info, col_count = st.columns([1, 1, 1])
 
     with col_time:
         # st.subheader("采集状态")
         if crawl_time:
-            st.caption(f"上次采集时间: {crawl_time} ⬅️ {schedule_text}")
+            st.caption(f"上次采集时间: {crawl_time}")
         else:
-            st.caption(f"上次采集时间: 无记录 ⬅️ {schedule_text}")
+            st.caption(f"上次采集时间: 无记录")
+
+    with col_info:
+        st.caption(f"{schedule_text}")
 
     with col_count:
 #         st.subheader("数据量")
