@@ -1,10 +1,12 @@
+# .github/workflows/cleaner.yml
+
 name: Clean Up Old Runs
 
 on:
   workflow_dispatch: # 允许手动运行
   schedule:
-    # 每周一 UTC 00:00 (CST 08:00) 运行一次清理任务
-    - cron: '0 0 * * 1'
+    # 每周日 UTC 19:00 (CST 03:00) 运行一次清理任务
+    - cron: '0 19 * * 6'
 
 permissions:
   contents: none
@@ -20,7 +22,7 @@ jobs:
         with:
           # 必须使用具有 'workflow' 范围的 PAT 或 GITHUB_TOKEN 并授予 'actions: write' 权限
           token: ${{ secrets.GITHUB_TOKEN }}
-          # 仅保留最近 7 天的运行记录
-          retain_days: 7
-          # 每个工作流最少保留的运行次数
+          # 仅保留最近 1 天的运行记录
+          retain_days: 1
+          # 每个工作流最少保留 3 条运行记录
           keep_minimum_runs: 3

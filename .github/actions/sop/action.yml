@@ -1,3 +1,5 @@
+# .github/actions/sop/action.yml
+
 name: 'Setup, Run Crawler, and Commit Data'
 description: 'Sets up environment, runs the specified crawler task, and commits the results.'
 
@@ -15,7 +17,7 @@ runs:
       with:
         python-version: '3.13'
 
-    # 2. 关键优化：缓存 Python 依赖
+    # 2. 缓存 Python 依赖
     # 如果 requirements.txt 文件内容不变，则命中缓存，极大地减少安装时间。
     - name: Cache Python dependencies (pip cache)
       uses: actions/cache@v4
@@ -34,12 +36,12 @@ runs:
       shell: bash
       run: pip install -r requirements.txt
 
-    # 4. 最佳实践：时区修正
-    - name: Set Timezone to Asia/Shanghai (CST)
-      shell: bash
-      run: echo "TZ=Asia/Shanghai" >> $GITHUB_ENV
+    # # 4. 时区修正
+    # - name: Set Timezone to Asia/Shanghai (CST)
+    #   shell: bash
+    #   run: echo "TZ=Asia/Shanghai" >> $GITHUB_ENV
 
-    # 5. 核心：运行爬虫
+    # 5. 运行爬虫
     - name: Run Crawler for ${{ inputs.task_name }}
       shell: bash
       run: python crawler.py ${{ inputs.task_name }}

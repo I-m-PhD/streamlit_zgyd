@@ -1,3 +1,5 @@
+# .github/workflows/scheduler.yml
+
 name: Scheduled Crawler
 
 on:
@@ -15,14 +17,14 @@ on:
           - TASK_3
   
   schedule:
-    # T1: 每日 00:00 CST (UTC 16:00)
-    - cron: '0 16 * * *'
+    # T1: 每日 06:00 CST (UTC 22:00)
+    - cron: '0 22 * * *' 
+    
+    # T2: 每日 06:10-22:10 CST (每 4 小时一次，比 T1 晚 10 分钟。UTC 02:10, 06:10, 10:10, 14:10, 22:10)
+    - cron: '10 2,6,10,14,22 * * *' 
 
-    # T2: 每日 00:10, 12:10 CST (UTC 04:10, 16:10) - 为 T1 预留 10 分钟
-    - cron: '10 4,16 * * *'
-
-    # T3: 每时 20, 50 分 CST (UTC 20/50 分) - 避开所有关键提交点
-    - cron: '20,50 * * * *'
+    # T3: 每日 06:15-23:45 CST (每 30 分钟一次，比 T1 晚 15 分钟。UTC 15, 45 分，小时范围 0-15 和 22-23)
+    - cron: '15,45 0-15,22-23 * * *'
 
 permissions:
   contents: write # 授予写入权限用于提交数据 (用于 git-auto-commit-action)
@@ -32,12 +34,12 @@ jobs:
   # T1: 任务 1 Job 定义
   # ----------------------------------------------------
   run_task_1:
-    name: "TASK 1: 所有招采 (每日 00:00 CST)"
+    name: "TASK 1: 所有招采 (每日 06:00 CST)"
     runs-on: ubuntu-latest
     # 使用括号确保逻辑优先级正确，并使用精确匹配防止跳过
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_1') || 
-      (github.event.schedule == '0 16 * * *')
+      (github.event.schedule == '0 22 * * *')
 
     steps:
       # 关键：先检出代码，确保本地 Composite Action 可访问
@@ -45,7 +47,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Execute Composite Action for TASK_1
-        uses: ./.github/actions/setup-commit-crawler
+        uses: ./.github/actions/sop
         with:
           task_name: TASK_1
 
@@ -53,18 +55,18 @@ jobs:
   # T2: 任务 2 Job 定义
   # ----------------------------------------------------
   run_task_2:
-    name: "TASK 2: 正在招标 (每日 00:10/12:10 CST)"
+    name: "TASK 2: 正在招标 (每 4 小时一次, 06:10 CST 首次执行)"
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2') || 
-      (github.event.schedule == '10 4,16 * * *')
+      (github.event.schedule == '10 2,6,10,14,22 * * *')
 
     steps:
       - name: Checkout code for Local Action Access
         uses: actions/checkout@v5
 
       - name: Execute Composite Action for TASK_2
-        uses: ./.github/actions/setup-commit-crawler
+        uses: ./.github/actions/sop
         with:
           task_name: TASK_2
 
@@ -72,17 +74,17 @@ jobs:
   # T3: 任务 3 Job 定义
   # ----------------------------------------------------
   run_task_3:
-    name: "TASK 3: 正在招标_北京 (每时 20/50 分 CST)"
+    name: "TASK 3: 正在招标_北京 (每 30 分钟一次, 06:15 CST 首次执行)"
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3') || 
-      (github.event.schedule == '20,50 * * * *')
+      (github.event.schedule == '15,45 0-15,22-23 * * *')
 
     steps:
       - name: Checkout code for Local Action Access
         uses: actions/checkout@v5
 
       - name: Execute Composite Action for TASK_3
-        uses: ./.github/actions/setup-commit-crawler
+        uses: ./.github/actions/sop
         with:
           task_name: TASK_3
