@@ -18,6 +18,13 @@ TASK_CONFIG = {
     "TASK_3": {"payload": {"homePageQueryType": "Bidding", "companyType": "BJ"}, "name": "所有招采_正在招标_北京"},
 }
 
+# 任务对应的动态更新计划描述
+TASK_UPDATE_SCHEDULES = {
+    "TASK_1": "每日 06:00 更新",
+    "TASK_2": "每日 10:10, 14:10, 18:10, 22:10, 02:10 (次日), 06:10 (次日) 更新",
+    "TASK_3": "每日 08:00-23:59 (当日), 06:00-07:59 (次日) 整点 15, 45 分更新",
+}
+
 # --- METADATA AND DATA LOADING ---
 
 def load_metadata():
@@ -46,7 +53,7 @@ def load_data(task_name):
 # Setting plotly template
 pio.templates.default = "plotly_dark"
 
-def show_statistics(all_content, data_name, crawl_time):
+def show_statistics(all_content, data_name, crawl_time, task_key):
 
     st.markdown("---")
     st.header(f"{data_name}")
@@ -55,16 +62,20 @@ def show_statistics(all_content, data_name, crawl_time):
     record_count = len(all_content) if all_content is not None else 0
 
     # ---------------------------------------------------------
-    # 关键修改：显示采集状态和数据条数
+    # 显示采集状态和数据条数
     # ---------------------------------------------------------
+    
+    # 动态获取更新计划描述
+    schedule_text = TASK_UPDATE_SCHEDULES.get(task_key, "由 GitHub Action 定时更新")
+
     col_time, col_count = st.columns([2, 1])
 
     with col_time:
         # st.subheader("采集状态")
         if crawl_time:
-            st.caption(f"上次采集时间：**{crawl_time}** (由 GitHub Action 定时更新)")
+            st.caption(f"上次采集时间：**{crawl_time}** ({schedule_text})")
         else:
-            st.caption("上次采集时间：**无记录** (由 GitHub Action 定时更新)")
+            st.caption(f"上次采集时间：**无记录** ({schedule_text})")
 
     with col_count:
 #         st.subheader("数据量")
