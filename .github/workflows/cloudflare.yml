@@ -31,4 +31,4 @@ jobs:
           
           # 安全注入 Worker 运行时的 Secrets
           secrets: |
-            WORKER_GITHUB_PAT
+            CLOUDFLARE_WORKER

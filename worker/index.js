@@ -41,7 +41,7 @@ const CRON_TO_WORKFLOW = {
 
 export default {
     async scheduled(event, env, ctx) {
-        const { WORKER_GITHUB_PAT, GITHUB_OWNER, GITHUB_REPO, TARGET_BRANCH } = env;
+        const { CLOUDFLARE_WORKER, GITHUB_OWNER, GITHUB_REPO, TARGET_BRANCH } = env;
         
         // 1. 根据触发的 Cron 表达式 (event.cron) 查找对应的工作流配置
         const taskConfig = CRON_TO_WORKFLOW[event.cron];
@@ -54,8 +54,8 @@ export default {
         const WORKFLOW_ID = taskConfig.id;
         const taskDescription = taskConfig.description;
 
-        if (!WORKER_GITHUB_PAT) {
-            console.error("FATAL ERROR: WORKER_GITHUB_PAT is missing or invalid in Worker environment.");
+        if (!CLOUDFLARE_WORKER) {
+            console.error("FATAL ERROR: CLOUDFLARE_WORKER is missing or invalid in Worker environment.");
             throw new Error("Worker failed: Missing GitHub PAT Secret.");
         }
 
@@ -69,7 +69,7 @@ export default {
 
         const headers = {
             'Accept': 'application/vnd.github.v3+json',
-            'Authorization': `token ${WORKER_GITHUB_PAT}`,
+            'Authorization': `token ${CLOUDFLARE_WORKER}`,
             'User-Agent': `Cloudflare-Worker-${taskDescription}`,
             'Content-Type': 'application/json',
         };
