@@ -6,8 +6,8 @@
 const CRON_TO_WORKFLOW = {
     // =========================================================================
     // 1. cleaner.yml (每周清理)
-    // 表达式: 0 19 * * 0 (每周日 UTC 19:00)
-    "0 19 * * 0": { 
+    // 表达式: 0 19 * * 7 (每周日 UTC 19:00)
+    "0 19 * * 7": { 
         id: "cleaner.yml", 
         description: "Weekly Cleanup (cleaner.yml)",
         input: {} // 清理任务无需额外参数

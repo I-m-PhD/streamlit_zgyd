@@ -9,7 +9,7 @@ on:
     paths:
       - 'worker/**'     # 监控 Worker 脚本文件夹
       - 'wrangler.toml' # 监控 Worker 配置文件（包含 Cron 表达式）
-  workflow_dispatch: # 允许手动触发部署
+  workflow_dispatch:    # 允许手动触发部署
 
 jobs:
   deploy:
@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy Worker and Inject Secrets
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           # 认证信息来自 GitHub Secrets
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
