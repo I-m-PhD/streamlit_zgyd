@@ -73,9 +73,9 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     with col_time:
         # st.subheader("采集状态")
         if crawl_time:
-            st.caption(f"上次采集时间: {crawl_time} <-- [{schedule_text}]")
+            st.caption(f"上次采集时间: {crawl_time} ⬅️ {schedule_text}")
         else:
-            st.caption(f"上次采集时间: 无记录 <-- [{schedule_text}]")
+            st.caption(f"上次采集时间: 无记录 ⬅️ {schedule_text}")
 
     with col_count:
 #         st.subheader("数据量")
