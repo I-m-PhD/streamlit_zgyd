@@ -81,7 +81,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         st.caption(f"{schedule_text}")
 
     with col_count:
-#         st.subheader("数据量")
+        # st.subheader("数据量")
         if record_count > 0:
             st.caption(f"当前总记录数: {record_count} 条")
         else:
