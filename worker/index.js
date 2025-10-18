@@ -93,5 +93,9 @@ export default {
             console.error('Fetch error:', error);
             throw error;
         }
+    },
+    // 添加这个函数来处理网页访问，防止 Error 1101
+    async fetch(request, env, ctx) {
+        return new Response("This Worker is a Cron Scheduler and does not serve web content.", { status: 200 });
     }
 };
