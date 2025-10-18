@@ -7,8 +7,10 @@ on:
     branches:
       - main  
     paths:
-      - 'worker/**'     # 监控 Worker 脚本文件夹
-      - 'wrangler.toml' # 监控 Worker 配置文件（包含 Cron 表达式）
+      - 'worker/**'     # 监控 Worker 脚本文件夹, Worker 的核心逻辑代码
+      - 'wrangler.toml' # 监控 Worker 配置文件, 包含 Worker 的 Cron 表达式
+      - 'package.json'  # 监控 package.json 文件, 包含 Wrangler CLI 的版本
+      - '.github/workflows/cloudflare.yml'  # 监控工作流文件本身
   workflow_dispatch:    # 允许手动触发部署
 
 jobs:
