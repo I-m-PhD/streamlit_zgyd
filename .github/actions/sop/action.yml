@@ -18,7 +18,7 @@ runs:
         python-version: '3.13'
 
     # 2. 缓存 Python 依赖
-    # 如果 requirements.txt 文件内容不变，则命中缓存，极大地减少安装时间。
+    # 如果命中缓存，极大地减少安装时间。
     - name: Cache Python dependencies (pip cache)
       uses: actions/cache@v4
       with:
