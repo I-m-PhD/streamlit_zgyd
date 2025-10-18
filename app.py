@@ -127,7 +127,7 @@ def show_statistics(all_content, data_name, crawl_time):
     with col1:
         time_df_hour = df.groupby('PublishHour', observed=True)['PublishDateTime'].count().reset_index(name='UpdateCount')
         fig_hour = px.bar(time_df_hour, x='PublishHour', y='UpdateCount', title='全时段更新活跃度', labels={'PublishHour': '时刻 (0-23)', 'UpdateCount': '更新频次'}, height=400)
-        fig_hour.update_layout(xaxis={'tickmode': 'linear', 'dtick': 1})
+        fig_hour.update_layout(xaxis={'tickmode': 'linear', 'dtick': 1, 'range': [-0.5, 23.5]})
         st.plotly_chart(fig_hour, use_container_width=True)
     with col2:
         hour_order = list(range(24))
@@ -176,7 +176,7 @@ def main():
         initial_sidebar_state="collapsed"
     )
 
-    st.title("📡 招采数据监控")
+    st.title("招采数据监控")
     st.info("所有数据集均通过 GitHub Actions 定时更新。")
 
     metadata = load_metadata()
