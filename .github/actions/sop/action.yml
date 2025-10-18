@@ -36,17 +36,12 @@ runs:
       shell: bash
       run: pip install -r requirements.txt
 
-    # # 4. 时区修正
-    # - name: Set Timezone to Asia/Shanghai (CST)
-    #   shell: bash
-    #   run: echo "TZ=Asia/Shanghai" >> $GITHUB_ENV
-
-    # 5. 运行爬虫
+    # 4. 运行爬虫
     - name: Run Crawler for ${{ inputs.task_name }}
       shell: bash
       run: python crawler.py ${{ inputs.task_name }}
 
-    # 6. 原子性提交
+    # 5. 原子性提交
     - name: Commit and Push new data
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
