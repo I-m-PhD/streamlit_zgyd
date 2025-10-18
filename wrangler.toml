@@ -1,6 +1,6 @@
 # wrangler.toml
 
-name = "streamlit-zgyd-cron-scheduler"
+name = "streamlit_zgyd_scheduler"
 main = "worker/index.js"
 compatibility_date = "2024-01-01" 
 

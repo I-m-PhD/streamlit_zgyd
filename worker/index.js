@@ -18,7 +18,7 @@ const CRON_TO_WORKFLOW = {
     "0 22 * * *": { 
         id: "scheduler.yml", 
         description: "Daily Schedule (TASK_1)",
-        input: { task_id: "TASK_1" } // 传入任务ID
+        input: { task_to_run: "TASK_1" } // 传入任务ID
     },
     // =========================================================================
     // 3. scheduler.yml - TASK_2 (每 4 小时一次，比 T1 晚 10 分钟)
@@ -26,7 +26,7 @@ const CRON_TO_WORKFLOW = {
     "10 2,6,10,14,18,22 * * *": { 
         id: "scheduler.yml", 
         description: "4-Hourly Schedule (TASK_2)",
-        input: { task_id: "TASK_2" } // 传入任务ID
+        input: { task_to_run: "TASK_2" } // 传入任务ID
     },
     // =========================================================================
     // 4. scheduler.yml - TASK_3 (每 30 分钟一次，比 T1 晚 15 分钟)
@@ -34,7 +34,7 @@ const CRON_TO_WORKFLOW = {
     "15,45 0-15,22-23 * * *": { 
         id: "scheduler.yml", 
         description: "Half-Hourly Schedule (TASK_3)",
-        input: { task_id: "TASK_3" } // 传入任务ID
+        input: { task_to_run: "TASK_3" } // 传入任务ID
     }
 };
 
@@ -53,6 +53,11 @@ export default {
         
         const WORKFLOW_ID = taskConfig.id;
         const taskDescription = taskConfig.description;
+
+        if (!WORKER_GITHUB_PAT) {
+            console.error("FATAL ERROR: WORKER_GITHUB_PAT is missing or invalid in Worker environment.");
+            throw new Error("Worker failed: Missing GitHub PAT Secret.");
+        }
 
         // 2. 构造 API URL 和请求体
         const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`;
