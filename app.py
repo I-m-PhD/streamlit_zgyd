@@ -68,7 +68,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     # 动态获取更新计划描述
     schedule_text = TASK_UPDATE_SCHEDULES.get(task_key, "由 GitHub Action 定时更新")
 
-    col_time, col_info, col_count = st.columns([1, 1, 1])
+    col_time, col_info, col_count = st.columns([1, 2, 1])
 
     with col_time:
         # st.subheader("采集状态")
