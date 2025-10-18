@@ -26,9 +26,14 @@ jobs:
           # 认证信息来自 GitHub Secrets
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          
           # 告诉 Wrangler 配置文件在根目录
           workingDirectory: ./
           
           # 安全注入 Worker 运行时的 Secrets
           secrets: |
             CLOUDFLARE_WORKER
+
+        # 引入 env 块，强制确保该值在 Action 步骤环境中可用
+        env:
+          CLOUDFLARE_WORKER: ${{ secrets.CLOUDFLARE_WORKER }}
