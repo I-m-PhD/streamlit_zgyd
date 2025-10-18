@@ -1,6 +1,6 @@
 # .github/workflows/cloudflare.yml
 
-name: Deploy Cloudflare Worker Scheduler
+name: Deploy Cloudflare Worker
 
 on:
   push:
