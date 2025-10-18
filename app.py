@@ -22,7 +22,7 @@ TASK_CONFIG = {
 TASK_UPDATE_SCHEDULES = {
     "TASK_1": "每日 06:00 更新",
     "TASK_2": "每日 10:10, 14:10, 18:10, 22:10, 02:10 (次日), 06:10 (次日) 更新",
-    "TASK_3": "每日 08:00-23:59 (当日), 06:00-07:59 (次日) 整点 15, 45 分更新",
+    "TASK_3": "每日 08:00-23:59 (当日), 06:00-07:59 (次日) 整点 15 分, 45 分更新",
 }
 
 # --- METADATA AND DATA LOADING ---
@@ -73,16 +73,16 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     with col_time:
         # st.subheader("采集状态")
         if crawl_time:
-            st.caption(f"上次采集时间：**{crawl_time}** ({schedule_text})")
+            st.caption(f"上次采集时间: __{crawl_time}__  [{schedule_text}]")
         else:
-            st.caption(f"上次采集时间：**无记录** ({schedule_text})")
+            st.caption(f"上次采集时间: __无记录__  [{schedule_text}]")
 
     with col_count:
 #         st.subheader("数据量")
         if record_count > 0:
-            st.caption(f"当前总记录数：**{record_count}** 条")
+            st.caption(f"当前总记录数: __{record_count}__ 条")
         else:
-            st.caption("当前总记录数：**0** 条 (等待首次采集)")
+            st.caption("当前总记录数: __0__ 条 (等待首次采集)")
 
     # st.markdown("---")
     # ---------------------------------------------------------
