@@ -200,7 +200,10 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             'backDate': '截标时间'
         }
 
-        available_cols = [col for col in required_cols_map.keys() if col in df.columns]
+        # 合并所有必要的列
+        all_required_keys = list(required_cols_map.keys())
+        # 由于 df 已经有 URL_LINK，我们需要确保它也被检查
+        available_cols = [col for col in all_required_keys if col in df.columns]
 
         if not available_cols:
             st.warning("无法显示数据表：抓取的数据中缺少必要的字段。")
@@ -212,7 +215,16 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
 
-        st.dataframe(display_df, use_container_width=True, height=600)
+        # 3. 【渲染逻辑】使用 st.dataframe，并应用最简 LinkColumn 配置
+        st.dataframe(
+            display_df, 
+            use_container_width=True, 
+            height=600,
+            column_config={
+                # 保持最简 LinkColumn 配置，避免 v1.50.0 的 TypeError Bug
+                "详情链接": st.column_config.LinkColumn()
+            }
+        )
 
 
 # --- MAIN APPLICATION ENTRY POINT ---
