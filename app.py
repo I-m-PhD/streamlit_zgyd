@@ -210,11 +210,9 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             height=600,
             column_config={
                 "标题": st.column_config.LinkColumn(
-                    "标题", # 标题作为显示文本
-                    # link_column 必须指向包含 URL 的列名
+                    # 关键修正：将位置参数 '标题' 改为关键字参数 label='标题'
+                    label="标题", 
                     help="点击查看项目详情",
-                    # 关键：指定哪一列包含了超链接的 URL。
-                    # '详情链接' 是我们通过 rename_map 构造的 'link' 列的新名字
                     link_column='详情链接'
                 ),
                 # 隐藏用于提供 URL 的 '详情链接' 列
