@@ -1,6 +1,6 @@
 # .github/workflows/cleaner.yml
 
-name: Clean Up Old Runs
+name: Remove Old Runs
 
 on:
   workflow_dispatch: # 允许手动运行
