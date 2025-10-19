@@ -153,10 +153,9 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         fig_heatmap.update_xaxes(range=[-0.5, 23.5], tickmode='linear', dtick=1)
         st.plotly_chart(fig_heatmap, use_container_width=True)
 
-
     # --- 3. 原始数据表格 (仅限北京) ---
     if data_name == "所有招采_正在招标_北京":
-        # st.subheader("3. 原始数据表")
+        st.subheader("3. 原始数据表") # 加上 subheader 提升可读性
 
         # 1. 定义 BASE_URL
         BASE_URL = 'https://b2b.10086.cn'
@@ -171,17 +170,13 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             axis=1
         )
         
-        # 3. 创建 Markdown 格式的超链接字符串，替换原始的 'name' 列
-        df['name'] = df.apply(
-            lambda row: f"[{row.get('name', 'N/A')}]({row['URL']})",
-            axis=1
-        )
-        # 注意：这里我们覆盖了原始的 'name' 列，使其包含链接
-
+        # 3. 创建一个链接的副本列
+        df['link_for_config'] = df['URL']
+        
         required_cols_map = {
             'companyTypeName': '单位',
-            # 'name' 现在包含 Markdown 链接
-            'name': '标题', 
+            'name': '标题', # 标题作为显示文本
+            'link_for_config': '详情链接', # 新增，作为链接源
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
@@ -203,12 +198,21 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
 
-        # 5. 【最终渲染】不使用任何 column_config，依赖 Streamlit 自动解析 Markdown
-        st.dataframe(
+        # 5. 【核心修正】使用 st.data_editor 替代 st.dataframe
+        # st.data_editor 的 column_config 渲染链接的行为更稳定，更不容易触发旧版本 Bug
+        st.data_editor(
             display_df, 
             use_container_width=True, 
-            height=600
-            # 移除 column_config
+            height=600,
+            disabled=display_df.columns, # 禁用所有编辑功能，使其行为接近 st.dataframe
+            column_config={
+                # 使用最简洁的 LinkColumn 语法
+                "标题": st.column_config.LinkColumn(
+                    link_column='详情链接'
+                ),
+                # 隐藏用于提供 URL 的 '详情链接' 列
+                "详情链接": None 
+            }
         )
 
 
