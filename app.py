@@ -153,35 +153,20 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         fig_heatmap.update_xaxes(range=[-0.5, 23.5], tickmode='linear', dtick=1)
         st.plotly_chart(fig_heatmap, use_container_width=True)
 
+
     # --- 3. 原始数据表格 (仅限北京) ---
     if data_name == "所有招采_正在招标_北京":
-        st.subheader("3. 原始数据表") 
+        # st.subheader("3. 原始数据表")
 
-        # 1. 定义 BASE_URL
-        BASE_URL = 'https://b2b.10086.cn'
-        
-        # 2. 构造完整的 URL 字段
-        df['URL_for_Link'] = df.apply(
-            lambda row: f'{BASE_URL}/#/noticeDetail?'
-                        f'publishId={row.get("publishId", "")}&'
-                        f'publishUuid={row.get("uuid", "")}&'
-                        f'publishType={row.get("publishType", "")}&'
-                        f'publishOneType={row.get("publishOneType", "")}',
-            axis=1
-        )
-        
-        # 3. 定义需要显示的列和重命名
         required_cols_map = {
             'companyTypeName': '单位',
-            'name': '项目名称', # 纯文本标题
-            'URL_for_Link': '标题', # 包含 URL，将渲染为链接
+            'name': '标题',
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
             'backDate': '截标时间'
         }
 
-        # 确保列存在
         available_cols = [col for col in required_cols_map.keys() if col in df.columns]
 
         if not available_cols:
@@ -189,28 +174,13 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             return
 
         rename_map = {col: required_cols_map[col] for col in available_cols}
-
-        # 4. 构造用于展示的 DataFrame
         display_df = df[available_cols].rename(columns=rename_map)
 
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
-            
-        # 5. 【最终原生渲染】使用 st.dataframe 和 LinkColumn
-        st.dataframe(
-            display_df, 
-            use_container_width=True, 
-            height=600,
-            column_config={
-                "标题": st.column_config.LinkColumn(
-                    # 关键修正：使用 display_text 参数显示通用文本，而非 URL
-                    display_text="查看详情",
-                    # 避免使用任何其他关键字参数，以防触发 v1.50.0 的 Bug
-                ),
-                # 隐藏纯文本的标题，仅显示链接
-                "项目名称": None 
-            }
-        )
+
+        st.dataframe(display_df, use_container_width=True, height=600)
+
 
 # --- MAIN APPLICATION ENTRY POINT ---
 
