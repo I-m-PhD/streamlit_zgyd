@@ -160,7 +160,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         # 1. 定义 BASE_URL
         BASE_URL = 'https://b2b.10086.cn'
         
-        # 2. 【核心修正】构造完整的 URL 字段，并将其赋值给将要显示为链接的列
+        # 2. 构造完整的 URL 字段
         df['URL_for_Link'] = df.apply(
             lambda row: f'{BASE_URL}/#/noticeDetail?'
                         f'publishId={row.get("publishId", "")}&'
@@ -173,8 +173,8 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         # 3. 定义需要显示的列和重命名
         required_cols_map = {
             'companyTypeName': '单位',
-            'name': '项目名称', # 原标题列改为显示文本
-            'URL_for_Link': '标题', # 新增，这一列将包含 URL，并最终显示为链接
+            'name': '项目名称', # 纯文本标题
+            'URL_for_Link': '标题', # 包含 URL，将渲染为链接
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
@@ -196,26 +196,21 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
             
-        # 5. 使用 st.dataframe 和 LinkColumn
-        # LinkColumn 将 '标题' 列识别为 URL，并将其内容作为 URL 渲染。
-        # 同时，我们使用 display_text 参数，通过正则表达式提取 '项目名称' 的内容，并将其作为链接的显示文本。
+        # 5. 【最终原生渲染】使用 st.dataframe 和 LinkColumn
         st.dataframe(
             display_df, 
             use_container_width=True, 
             height=600,
             column_config={
                 "标题": st.column_config.LinkColumn(
-                    # 关键：使用 display_text 正则表达式来显示另一列的数据
-                    # 由于 LinkColumn 默认是显示 URL 自身的，如果要显示 '项目名称'，
-                    # 理论上需要更复杂的配置或使用 display_text 参数。
-                    # 为了避开复杂的 display_text 逻辑，我们先使用最简单的配置。
-                    # 如果需要显示项目名称，请看下面的替代方案。
+                    # 关键修正：使用 display_text 参数显示通用文本，而非 URL
+                    display_text="查看详情",
+                    # 避免使用任何其他关键字参数，以防触发 v1.50.0 的 Bug
                 ),
-                # 隐藏 '项目名称' 列，因为它的内容（纯文本标题）会由 LinkColumn 使用
+                # 隐藏纯文本的标题，仅显示链接
                 "项目名称": None 
             }
         )
-
 
 # --- MAIN APPLICATION ENTRY POINT ---
 
