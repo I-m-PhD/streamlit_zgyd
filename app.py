@@ -209,11 +209,10 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             use_container_width=True, 
             height=600,
             column_config={
-                # 告诉 Streamlit：'标题' 这一列要作为 LinkColumn 来显示。
-                # Streamlit 会默认使用字典的键（"标题"）作为列的标签。
                 "标题": st.column_config.LinkColumn(
-                    help="点击查看项目详情",
-                    # 关键：指定 URL 来源列
+                    # 关键：必须明确指定 label，避免 Streamlit 内部混淆。
+                    # 错误发生在缺少或参数位置不对时。
+                    label="标题", 
                     link_column='详情链接'
                 ),
                 # 隐藏用于提供 URL 的 '详情链接' 列
