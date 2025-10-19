@@ -158,9 +158,23 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     if data_name == "所有招采_正在招标_北京":
         # st.subheader("3. 原始数据表")
 
+        # 1. 定义 BASE_URL
+        BASE_URL = 'https://b2b.10086.cn'
+        
+        # 2. 【新增逻辑】构造纯 URL 字符串列
+        df['URL_LINK'] = df.apply(
+            lambda row: f'{BASE_URL}/#/noticeDetail?'
+                        f'publishId={row.get("publishId", "")}&'
+                        f'publishUuid={row.get("uuid", "")}&'
+                        f'publishType={row.get("publishType", "")}&'
+                        f'publishOneType={row.get("publishOneType", "")}',
+            axis=1
+        )
+
         required_cols_map = {
             'companyTypeName': '单位',
             'name': '标题',
+            'URL_LINK': '详情链接', # 新增要显示的列
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
@@ -179,7 +193,18 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
 
-        st.dataframe(display_df, use_container_width=True, height=600)
+        # 3. 【渲染逻辑】使用 st.dataframe，并应用最简 LinkColumn 配置
+        st.dataframe(
+            display_df, 
+            use_container_width=True, 
+            height=600,
+            column_config={
+                # 仅将 '详情链接' 列配置为 LinkColumn
+                # LinkColumn() 不带任何参数，这是最不可能触发 v1.50.0 TypeError 的方法。
+                # 这种配置会显示完整的 URL 文本，但它是可点击的。
+                "详情链接": st.column_config.LinkColumn()
+            }
+        )
 
 
 # --- MAIN APPLICATION ENTRY POINT ---
