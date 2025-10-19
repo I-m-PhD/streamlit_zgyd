@@ -171,20 +171,17 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             axis=1
         )
         
-        # 3. 创建 HTML 格式的超链接字符串
-        # HTML 格式：<a href='URL' target='_blank'>标题文本</a>
-        def make_clickable(row):
-            title = row.get('name', 'N/A')
-            url = row['URL']
-            return f"<a href='{url}' target='_blank'>{title}</a>"
+        # 3. 创建 Markdown 格式的超链接字符串，替换原始的 'name' 列
+        df['name'] = df.apply(
+            lambda row: f"[{row.get('name', 'N/A')}]({row['URL']})",
+            axis=1
+        )
+        # 注意：这里我们覆盖了原始的 'name' 列，使其包含链接
 
-        df['clickable_title'] = df.apply(make_clickable, axis=1)
-        
-        # 4. 定义需要显示的列和重命名
         required_cols_map = {
-            # 使用包含 HTML 链接的列
-            'clickable_title': '标题', 
             'companyTypeName': '单位',
+            # 'name' 现在包含 Markdown 链接
+            'name': '标题', 
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
@@ -206,7 +203,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
 
-        # 5. 不使用任何 column_config，依赖 Streamlit 自动解析 Markdown
+        # 5. 【最终渲染】不使用任何 column_config，依赖 Streamlit 自动解析 Markdown
         st.dataframe(
             display_df, 
             use_container_width=True, 
