@@ -146,49 +146,25 @@ def get_old_data_from_repo(repo, file_path):
         return []
 
 def commit_new_state(repo, new_data_list, file_path):
-    """将新数据提交回 GitHub 仓库"""
+    """
+    将新数据写入本地状态文件，供 git-auto-commit-action 统一提交。
+    (注意：此函数仅写入本地文件，不再通过 PyGithub API 远程提交，以避免与 Actions 冲突)
+    """
     new_data_content = json.dumps(new_data_list, ensure_ascii=False, indent=4)
-    commit_message = f"[Scheduler] 自动更新 TASK_3 状态数据: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     
-    # 使用 GitHub Actions Bot 身份
-    author = InputGitAuthor("github-actions[bot]", "41898282+github-actions[bot]@users.noreply.github.com")
-
-    # 尝试获取旧文件 SHA，以便进行更新操作
-    contents = None
+    # 1. 确保目录存在 (os.makedirs 是幂等的)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    
+    # 2. 将新状态数据写入本地文件
     try:
-        contents = repo.get_contents(file_path)
-    except UnknownObjectException:
-        # 文件不存在，正常情况，继续到创建文件步骤
-        pass
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(new_data_content)
+        # 打印信息用于日志确认
+        print(f"[+] 新状态数据已写入本地文件: {file_path}")
+        print(f"[*] 注意：文件 {file_path} 将由后续的 git-auto-commit-action 统一提交和推送。")
     except Exception as e:
-        # 捕获其他读取错误（如权限不足）
-        print(f"[-] ERROR: 尝试读取旧状态文件 {file_path} 失败！错误信息: {e}")
-
-    try:
-        if contents:
-            # 文件存在，执行更新操作
-            repo.update_file(
-                path=file_path, 
-                message=commit_message, 
-                content=new_data_content, 
-                sha=contents.sha,
-                author=author
-            )
-            print(f"[+] 新状态数据已更新到 {file_path}")
-        else:
-            # 文件不存在，执行创建操作
-            repo.create_file(
-                path=file_path, 
-                message=commit_message, 
-                content=new_data_content,
-                author=author
-            )
-            print(f"[+] 新状态文件 {file_path} 已创建。")
-    except Exception as commit_e:
-        # *** 关键修复：捕获提交API级别的失败，并明确报错 ***
-        print(f"[-] FATAL ERROR: 提交状态文件 {file_path} 失败！")
-        print(f"[-] 错误信息: {commit_e}")
-        print("[-] 请检查 CLOUDFLARE_WORKER (GitHub PAT) 是否拥有 contents:write 或 repo 权限。")
+        print(f"[-] FATAL ERROR: 写入本地状态文件 {file_path} 失败！错误信息: {e}")
+        # 如果本地写入失败，则后续的 git-auto-commit-action 将无法提交此文件
 
 def compare_data_and_generate_report(new_data, old_data):
     """对比新旧数据，返回新增和删除的列表"""

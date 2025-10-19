@@ -76,11 +76,11 @@ jobs:
 
       - name: Commit and Push Local Data Files (for Streamlit)
         # 提交 Streamlit 需要的 zgyd 目录文件。
-        # task_3_state.json 已在 crawler.py 中通过 PyGithub/PAT 提交，此步骤不会影响它。
+        # 现在 task_3_state.json 也是在本地创建的，必须明确包含在提交模式中。
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "SCHEDULER: Auto-update data [TASK_3] for Streamlit."
-          file_pattern: 'zgyd/*.json zgyd/metadata.json'
+          file_pattern: 'zgyd/*.json zgyd/metadata.json zgyd/task_3_state.json'
           commit_user_name: 'github-actions[bot]'
           commit_user_email: 'github-actions[bot]@users.noreply.github.com'
           push_options: '--force-with-lease'
