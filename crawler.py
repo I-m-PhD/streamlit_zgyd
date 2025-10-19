@@ -91,27 +91,47 @@ def send_server_chan_notification(server_chan_url, content_md):
     except requests.exceptions.RequestException as e:
         print(f"[-] Server 酱网络请求失败: {e}")
 
-def setup_github():
-    """初始化 GitHub 客户端"""
-    pat_token = os.environ.get('CLOUDFLARE_WORKER')
+def setup_github(repo_full_name, github_pat):
+    """
+    初始化 GitHub 客户端并获取仓库实例。
     
-    # *** 新增：打印 Token 状态 ***
+    Args:
+        repo_full_name (str): 仓库的全名 (owner/repo)。
+        github_pat (str): GitHub 个人访问令牌 (PAT)。
+
+    Returns:
+        github.Repository.Repository: GitHub 仓库实例。
+    """
+    
+    # 核心修改：直接使用传入的参数
+    pat_token = github_pat
+    
     if not pat_token:
-        print("[-] FATAL ERROR: CLOUDFLARE_WORKER 环境变量为空，PyGithub 初始化失败！")
+        print("[-] FATAL ERROR: CLOUDFLARE_WORKER / GITHUB_PAT 变量为空，PyGithub 初始化失败！")
         return None
     
     # 打印长度以确认是否读取到 Secret
-    print(f"[+] CLOUDFLARE_WORKER Token 已读取，长度为: {len(pat_token.strip())}")
+    stripped_token = pat_token.strip()
+    print(f"[+] CLOUDFLARE_WORKER Token 已读取，长度为: {len(stripped_token)}")
     
     try:
-        # 使用 strip() 移除可能的空白字符和换行符
-        g = Github(pat_token.strip()) 
-        # 尝试执行一个简单的API操作（如获取用户）来验证Token
-        g.get_user() 
-        print("[+] PyGithub 客户端初始化成功并验证通过。")
-        return g
+        # 1. 认证客户端
+        g = Github(stripped_token) 
+        
+        # 验证认证是否成功（通过获取用户）
+        user = g.get_user()
+        print(f"[+] PyGithub 客户端初始化成功并验证通过。当前用户: {user.login}")
+
+        # 2. 获取仓库实例 (这是之前缺失的关键步骤)
+        # 这一步使用传入的 repo_full_name
+        repo = g.get_repo(repo_full_name) 
+        print(f"[+] 成功获取仓库实例: {repo_full_name}")
+        
+        # 3. 返回仓库实例
+        return repo
+        
     except Exception as e:
-        print(f"[-] FATAL ERROR: PyGithub 认证失败，请检查 Token。错误信息: {e}")
+        print(f"[-] FATAL ERROR: PyGithub 认证或获取仓库失败，请检查 Token/Repo名称。错误信息: {e}")
         return None
 
 def get_old_data_from_repo(repo, file_path):
