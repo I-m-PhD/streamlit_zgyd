@@ -164,7 +164,11 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
-            'backDate': '截标时间'
+            'backDate': '截标时间',
+            'publishId': 'publishId',
+            'uuid': 'uuid',
+            'publishType': 'publishType',
+            'publishOneType': 'publishOneType',
         }
 
         available_cols = [col for col in required_cols_map.keys() if col in df.columns]
