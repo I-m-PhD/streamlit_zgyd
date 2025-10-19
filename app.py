@@ -210,8 +210,6 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             height=600,
             column_config={
                 "标题": st.column_config.LinkColumn(
-                    # 关键：必须明确指定 label，避免 Streamlit 内部混淆。
-                    # 错误发生在缺少或参数位置不对时。
                     label="标题", 
                     link_column='详情链接'
                 ),
