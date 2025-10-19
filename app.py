@@ -155,6 +155,16 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         time_df_heatmap['PublishDayOfWeek'] = pd.Categorical(time_df_heatmap['PublishDayOfWeek'], categories=day_order, ordered=True)
         fig_heatmap = px.density_heatmap(time_df_heatmap, x="PublishHour", y="PublishDayOfWeek", z="UpdateCount", title='更新活跃时段 vs. 周几', labels={"PublishHour": "时刻", "PublishDayOfWeek": "周几", "UpdateCount": "更新频次"}, category_orders={"PublishDayOfWeek": day_order, "PublishHour": hour_order}, nbinsx=24, color_continuous_scale=px.colors.sequential.Viridis, height=400)
         fig_heatmap.update_xaxes(range=[-0.5, 23.5], tickmode='linear', dtick=1)
+        fig_heatmap.update_layout(
+            # 将颜色条放置在图表顶部
+            coloraxis_colorbar=dict(
+                orientation="h",  # H: Horizontal (水平) 或 V: Vertical (垂直)
+                x=0,              # X轴位置，0 是最左，1 是最右
+                y=1.2,            # Y轴位置，0 是底部，1 是顶部 (负值表示在图表区域外部)
+                yanchor="top",    # 确保定位是基于颜色条的顶部
+                xanchor="left",   # 确保颜色条居左对齐
+            )
+        )
         st.plotly_chart(fig_heatmap, use_container_width=True)
 
 
