@@ -159,10 +159,10 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             # 将颜色条放置在图表顶部
             coloraxis_colorbar=dict(
                 orientation="h",  # H: Horizontal (水平) 或 V: Vertical (垂直)
-                x=0,              # X轴位置，0 是最左，1 是最右
+                x=1,              # X轴位置，0 是最左，1 是最右
                 y=1.4,            # Y轴位置，0 是底部，1 是顶部 (负值表示在图表区域外部)
                 yanchor="top",    # 确保定位是基于颜色条的顶部
-                xanchor="left",   # 确保颜色条居左对齐
+                xanchor="right",  # 确保颜色条居右对齐
             )
         )
         st.plotly_chart(fig_heatmap, use_container_width=True)
