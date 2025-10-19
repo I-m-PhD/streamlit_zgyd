@@ -246,7 +246,7 @@ def main():
     )
 
     st.title("招采数据监控")
-    st.info("所有数据集均通过 GitHub Actions 定时更新。")
+    st.info("通过 Cloudflare Worker 定时触发 GitHub Actions 自动更新")
 
     metadata = load_metadata()
 
@@ -263,9 +263,12 @@ def main():
     # 按照 TASK_CONFIG 的顺序创建 Tabs 列表
     task_keys = list(TASK_CONFIG.keys())
     tab_names = [TASK_CONFIG[key]["name"] for key in task_keys]
+
+    # 获取第三个 Tab 的名称
+    default_tab_name = tab_names[2] # 索引 2 对应第三个 Tab
     
     # 创建 Streamlit Tabs
-    tabs = st.tabs(tab_names)
+    tabs = st.tabs(tab_names, default=default_tab_name)
 
     # 遍历所有任务配置，并在各自的 Tab 内调用 show_statistics
     for i, task_key in enumerate(task_keys):
