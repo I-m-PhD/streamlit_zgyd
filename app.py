@@ -159,7 +159,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         # st.subheader("3. 原始数据表")
 
         required_cols_map = {
-            'companyTypeName': '公司区域',
+            'companyTypeName': '单位',
             'name': '标题',
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
