@@ -171,23 +171,24 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             axis=1
         )
         
-        # 3. 将标题和 URL 合并到一列中，使用 Pandas 的 .str.cat()
-        # 由于 LinkColumn 失败，我们直接让 '标题' 列存储 URL，并将其类型设置为 URL
-        df['标题（显示标题）'] = df['name']
-        df['标题'] = df['URL'] # 强制将 URL 放到目标显示列中
+        # 3. 创建 Markdown 格式的超链接字符串，替换原始的 'name' 列
+        df['name'] = df.apply(
+            lambda row: f"[{row.get('name', 'N/A')}]({row['URL']})",
+            axis=1
+        )
+        # 注意：这里我们覆盖了原始的 'name' 列，使其包含链接
 
         required_cols_map = {
-            # 使用 URL 填充的 '标题' 列
-            '标题': '标题', 
             'companyTypeName': '单位',
+            # 'name' 现在包含 Markdown 链接
+            'name': '标题', 
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
-            'backDate': '截标时间',
-            # 引入一个辅助列来显示真实的标题文本，因为 '标题' 列现在只显示 URL
-            '标题（显示标题）': '项目标题' 
+            'backDate': '截标时间'
         }
 
+        # 确保列存在
         available_cols = [col for col in required_cols_map.keys() if col in df.columns]
 
         if not available_cols:
@@ -196,27 +197,18 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
 
         rename_map = {col: required_cols_map[col] for col in available_cols}
 
-        # 4. 构造用于展示的 DataFrame (包含 URL 填充的 '标题' 字段)
+        # 4. 构造用于展示的 DataFrame
         display_df = df[available_cols].rename(columns=rename_map)
 
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
 
-        # 5. 使用 st.column_config.Column 并指定 type="url"
-        # 这种方式兼容性更高，Streamlit 会自动将其渲染为链接。
+        # 5. 不使用任何 column_config，依赖 Streamlit 自动解析 Markdown
         st.dataframe(
             display_df, 
             use_container_width=True, 
-            height=600,
-            column_config={
-                # 告诉 Streamlit '标题' 列是一个 URL 类型，Streamlit 应该自动渲染
-                "标题": st.column_config.Column(
-                    type="url",
-                    help="点击查看项目详情"
-                ),
-                # 隐藏这个辅助列，除非你需要它来显示完整的标题文本
-                "项目标题": None 
-            }
+            height=600
+            # 移除 column_config
         )
 
 
