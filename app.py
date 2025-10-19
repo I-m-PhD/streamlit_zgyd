@@ -171,17 +171,20 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             axis=1
         )
         
-        # 3. 创建 Markdown 格式的超链接字符串，替换原始的 'name' 列
-        df['name'] = df.apply(
-            lambda row: f"[{row.get('name', 'N/A')}]({row['URL']})",
-            axis=1
-        )
-        # 注意：这里我们覆盖了原始的 'name' 列，使其包含链接
+        # 3. 创建 HTML 格式的超链接字符串
+        # HTML 格式：<a href='URL' target='_blank'>标题文本</a>
+        def make_clickable(row):
+            title = row.get('name', 'N/A')
+            url = row['URL']
+            return f"<a href='{url}' target='_blank'>{title}</a>"
 
+        df['clickable_title'] = df.apply(make_clickable, axis=1)
+        
+        # 4. 定义需要显示的列和重命名
         required_cols_map = {
+            # 使用包含 HTML 链接的列
+            'clickable_title': '标题', 
             'companyTypeName': '单位',
-            # 'name' 现在包含 Markdown 链接
-            'name': '标题', 
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
@@ -197,19 +200,35 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
 
         rename_map = {col: required_cols_map[col] for col in available_cols}
 
-        # 4. 构造用于展示的 DataFrame
+        # 5. 构造用于展示的 DataFrame
         display_df = df[available_cols].rename(columns=rename_map)
 
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
 
-        # 5. 不使用任何 column_config，依赖 Streamlit 自动解析 Markdown
-        st.dataframe(
-            display_df, 
-            use_container_width=True, 
-            height=600
-            # 移除 column_config
+        # 6. 将 Pandas DataFrame 转换为 HTML，然后使用 st.markdown 渲染
+    
+        # 定义一个函数，用于将 '标题' 列标记为不需要转义
+        def highlight_title_html(val):
+            # val 已经是 HTML 字符串，返回本身
+            return val
+
+        # 使用 style.applymap() 或 style.apply()，但最简单的是使用 style.format() 
+        # 但由于我们已经将 HTML 嵌入到单元格，可以直接使用 to_html()
+        
+        # Streamlit 默认会使用暗黑模式，所以我们手动添加一些基础样式
+        html_table = display_df.to_html(
+            escape=False, # 关键：告诉 Pandas 不要转义 HTML
+            index=False,
+            table_id='procurement-table',
+            classes=['streamlit-dataframe']
         )
+        
+        # 使用 st.markdown 渲染 HTML
+        st.markdown(html_table, unsafe_allow_html=True)
+
+        # 移除 st.dataframe 的调用
+        # st.dataframe(display_df, use_container_width=True, height=600)
 
 
 # --- MAIN APPLICATION ENTRY POINT ---
