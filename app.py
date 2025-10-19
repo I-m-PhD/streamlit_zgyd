@@ -158,52 +158,16 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     if data_name == "所有招采_正在招标_北京":
         # st.subheader("3. 原始数据表")
 
-        # 1. 定义 BASE_URL 
-        BASE_URL = 'https://b2b.10086.cn'
-        
-        # 2. 【精确复制 crawler.py 逻辑】构造 URL 字段，并确保 None/NaN 转换为空字符串
-        def build_link_safely(row):
-            # 这是一个强健的函数，用于处理 Series 中的 None/NaN，确保 URL 参数中不会出现 'None' 字符串
-            def safe_param(key):
-                value = row.get(key)
-                # 使用 pd.notna 检查非空值，并转换为字符串
-                if pd.notna(value) and value is not None:
-                    return str(value)
-                # 否则返回空字符串，与 crawler.py 中的 .get(key, '') 效果一致
-                return ''
-
-            # 精确使用 crawler.py 中的字段名
-            link_id = safe_param('publishId')
-            link_uuid = safe_param('uuid')
-            link_publish_type = safe_param('publishType')
-            link_publish_one_type = safe_param('publishOneType')
-            
-            # 构造 URL (与 crawler.py 模板完全一致)
-            return (
-                f'{BASE_URL}/#/noticeDetail?'
-                f'publishId={link_id}&'
-                f'publishUuid={link_uuid}&'
-                f'publishType={link_publish_type}&'
-                f'publishOneType={link_publish_one_type}'
-            )
-
-        # 应用新的构建函数
-        df['URL_LINK'] = df.apply(build_link_safely, axis=1)
-
         required_cols_map = {
             'companyTypeName': '单位',
             'name': '标题',
-            'URL_LINK': '详情链接', # 新增的链接列
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
             'backDate': '截标时间'
         }
 
-        # 合并所有必要的列
-        all_required_keys = list(required_cols_map.keys())
-        # 由于 df 已经有 URL_LINK，我们需要确保它也被检查
-        available_cols = [col for col in all_required_keys if col in df.columns]
+        available_cols = [col for col in required_cols_map.keys() if col in df.columns]
 
         if not available_cols:
             st.warning("无法显示数据表：抓取的数据中缺少必要的字段。")
@@ -215,16 +179,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
 
-        # 3. 【渲染逻辑】使用 st.dataframe，并应用最简 LinkColumn 配置
-        st.dataframe(
-            display_df, 
-            use_container_width=True, 
-            height=600,
-            column_config={
-                # 保持最简 LinkColumn 配置，避免 v1.50.0 的 TypeError Bug
-                "详情链接": st.column_config.LinkColumn()
-            }
-        )
+        st.dataframe(display_df, use_container_width=True, height=600)
 
 
 # --- MAIN APPLICATION ENTRY POINT ---
