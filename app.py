@@ -159,11 +159,12 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         # st.subheader("3. 原始数据表")
 
         required_cols_map = {
-            'publishDate': '发布时间',
             'companyTypeName': '公司区域',
             'name': '标题',
-            'tenderSaleDeadline': '截标时间',
-            'backDate': '退回时间'
+            'publishDate': '发布时间',
+            'tenderSaleDeadline': '文件售卖截止时间',
+            'publicityEndTime': '截标时间',
+            'backDate': '回退时间'
         }
 
         available_cols = [col for col in required_cols_map.keys() if col in df.columns]
