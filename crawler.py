@@ -73,7 +73,7 @@ def send_server_chan_notification(server_chan_url, content_md):
         return
 
     payload = {
-        "title": "TASK 3 数据变动报告",
+        "title": "北京开标数据更新",
         # Server 酱的内容字段是 'desp'
         "desp": content_md 
     }
