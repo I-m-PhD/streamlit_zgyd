@@ -155,13 +155,6 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         time_df_heatmap['PublishDayOfWeek'] = pd.Categorical(time_df_heatmap['PublishDayOfWeek'], categories=day_order, ordered=True)
         fig_heatmap = px.density_heatmap(time_df_heatmap, x="PublishHour", y="PublishDayOfWeek", z="UpdateCount", title='更新活跃时段 vs. 周几', labels={"PublishHour": "时刻", "PublishDayOfWeek": "周几", "UpdateCount": "更新频次"}, category_orders={"PublishDayOfWeek": day_order, "PublishHour": hour_order}, nbinsx=24, color_continuous_scale=px.colors.sequential.Viridis, height=400)
         fig_heatmap.update_xaxes(range=[-0.5, 23.5], tickmode='linear', dtick=1)
-        fig_heatmap.update_yaxes(
-            title_text="",  # 将纵坐标的标题设置为空字符串
-            automargin=True # 保持自动调整边距以适应轴刻度标签
-        )
-        fig_heatmap.update_layout(
-            margin=dict(l=0)  # l: left margin (左边距), 单位是像素 (px)
-        )
         fig_heatmap.update_layout(
             # 将颜色条放置在图表顶部
             coloraxis_colorbar=dict(
