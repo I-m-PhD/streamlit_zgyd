@@ -218,7 +218,7 @@ def format_markdown_report(added_items, removed_items):
     # 辅助函数：生成单个条目的 Markdown 内容
     def format_item_details(item):
         # 从字典中安全获取所需字段
-        link_id = item.get('publishId', '')
+        link_id = item.get('id', '')
         link_uuid = item.get('uuid', '')
         link_publish_type = item.get('publishType', '')
         link_publish_one_type = item.get('publishOneType', '')

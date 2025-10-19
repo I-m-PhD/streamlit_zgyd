@@ -165,7 +165,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
             'backDate': '截标时间',
-            'publishId': 'publishId',
+            'id': 'id',
             'uuid': 'uuid',
             'publishType': 'publishType',
             'publishOneType': 'publishOneType',
