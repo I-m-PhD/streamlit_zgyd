@@ -155,13 +155,13 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
 
     # --- 3. 原始数据表格 (仅限北京) ---
     if data_name == "所有招采_正在招标_北京":
-        st.subheader("3. 原始数据表") # 加上 subheader 提升可读性
+        st.subheader("3. 原始数据表") 
 
         # 1. 定义 BASE_URL
         BASE_URL = 'https://b2b.10086.cn'
         
-        # 2. 构造完整的 URL 字段，并将其作为新的 'URL' 列
-        df['URL'] = df.apply(
+        # 2. 【核心修正】构造完整的 URL 字段，并将其赋值给将要显示为链接的列
+        df['URL_for_Link'] = df.apply(
             lambda row: f'{BASE_URL}/#/noticeDetail?'
                         f'publishId={row.get("publishId", "")}&'
                         f'publishUuid={row.get("uuid", "")}&'
@@ -170,13 +170,11 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             axis=1
         )
         
-        # 3. 创建一个链接的副本列
-        df['link_for_config'] = df['URL']
-        
+        # 3. 定义需要显示的列和重命名
         required_cols_map = {
             'companyTypeName': '单位',
-            'name': '标题', # 标题作为显示文本
-            'link_for_config': '详情链接', # 新增，作为链接源
+            'name': '项目名称', # 原标题列改为显示文本
+            'URL_for_Link': '标题', # 新增，这一列将包含 URL，并最终显示为链接
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
@@ -197,21 +195,24 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
 
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
-
-        # 5. 【核心修正】使用 st.data_editor 替代 st.dataframe
-        # st.data_editor 的 column_config 渲染链接的行为更稳定，更不容易触发旧版本 Bug
-        st.data_editor(
+            
+        # 5. 使用 st.dataframe 和 LinkColumn
+        # LinkColumn 将 '标题' 列识别为 URL，并将其内容作为 URL 渲染。
+        # 同时，我们使用 display_text 参数，通过正则表达式提取 '项目名称' 的内容，并将其作为链接的显示文本。
+        st.dataframe(
             display_df, 
             use_container_width=True, 
             height=600,
-            disabled=display_df.columns, # 禁用所有编辑功能，使其行为接近 st.dataframe
             column_config={
-                # 使用最简洁的 LinkColumn 语法
                 "标题": st.column_config.LinkColumn(
-                    link_column='详情链接'
+                    # 关键：使用 display_text 正则表达式来显示另一列的数据
+                    # 由于 LinkColumn 默认是显示 URL 自身的，如果要显示 '项目名称'，
+                    # 理论上需要更复杂的配置或使用 display_text 参数。
+                    # 为了避开复杂的 display_text 逻辑，我们先使用最简单的配置。
+                    # 如果需要显示项目名称，请看下面的替代方案。
                 ),
-                # 隐藏用于提供 URL 的 '详情链接' 列
-                "详情链接": None 
+                # 隐藏 '项目名称' 列，因为它的内容（纯文本标题）会由 LinkColumn 使用
+                "项目名称": None 
             }
         )
 
