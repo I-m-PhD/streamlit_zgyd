@@ -132,7 +132,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     frequency_df = df.groupby(['PublishDateOnly', 'PublishDayOfWeek'], observed=True)['PublishDateTime'].count().reset_index()
     frequency_df.columns = ['PublishDate', 'PublishDayOfWeek', 'UpdateCount']
     frequency_df = frequency_df.sort_values('PublishDate')
-    fig_freq = px.bar(frequency_df, x='PublishDate', y='UpdateCount', title='每日更新频次 (可缩放)', labels={'UpdateCount': '更新频次', 'PublishDate': '日期', 'PublishDayOfWeek': '周几'}, hover_data=['PublishDayOfWeek'], height=500)
+    fig_freq = px.bar(frequency_df, x='PublishDate', y='UpdateCount', title='每日更新频次', labels={'UpdateCount': '更新频次', 'PublishDate': '日期', 'PublishDayOfWeek': '周几'}, hover_data=['PublishDayOfWeek'], height=500)
     fig_freq.update_xaxes(tickangle=-45, rangeslider_visible=True, rangeselector=dict(bgcolor="#333333", activecolor="#555555", font=dict(color="white"), buttons=[dict(count=7, label="1周", step="day", stepmode="backward"), dict(count=1, label="1月", step="month", stepmode="backward"), dict(count=3, label="1季", step="month", stepmode="backward"), dict(count=1, label="1年", step="year", stepmode="backward"), dict(step="all", label="全部")]), tickformat="%Y-%m-%d")
     st.plotly_chart(fig_freq, use_container_width=True)
 
