@@ -183,29 +183,48 @@ def compare_data_and_generate_report(new_data, old_data):
     return added_items, removed_items
 
 def format_markdown_report(added_items, removed_items):
-    """格式化 Server 酱的 Markdown 内容"""
+    """格式化 Server 酱的 Markdown 内容，包含项目名称、日期和新格式链接"""
+    # 确保 BASE_URL 在此作用域内可用，因为它在文件顶部是全局定义的
+    global BASE_URL
+    
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     report_content = f"## 所有招采_正在招标_北京 数据变动报告\n"
     report_content += f"**时间：** {now_str}\n"
     report_content += f"**总计记录：** {len(added_items) + len(removed_items)} 条变动\n\n"
     
+    # 辅助函数：生成单个条目的 Markdown 内容
+    def format_item_details(item):
+        # 从字典中安全获取所需字段
+        link_id = item.get('publishId', '')
+        link_uuid = item.get('uuid', '')
+        link_publish_type = item.get('publishType', '')
+        link_publish_one_type = item.get('publishOneType', '')
+        
+        # 构造用户指定的新格式 URL
+        link = f'{BASE_URL}/#/noticeDetail?publishId={link_id}&publishUuid={link_uuid}&publishType={link_publish_type}&publishOneType={link_publish_one_type}'
+        
+        # 格式化输出内容
+        item_md = ""
+        item_md += f"> - **项目名称:** {item.get('name', 'N/A')}\n"
+        item_md += f"> - **发布日期:** {item.get('publishDate', 'N/A')}\n"
+        item_md += f"> - **公示结束:** {item.get('publicityEndTime', 'N/A')}\n"
+        item_md += f"> - **回退日期:** {item.get('backDate', 'N/A')}\n"
+        # 链接文本统一为“点击查看”
+        item_md += f"> - **详情链接:** [点击查看]({link})\n\n"
+        return item_md
+
     if added_items:
-        report_content += f"### 新增条目 ({len(added_items)}): \n"
+        report_content += f"### [+] 新增条目 ({len(added_items)}): \n"
         for item in added_items:
-            # 使用 URL 字段 (如果存在)
-            link = f"https://b2b.10086.cn/b2b/main/viewTZ.html?noticeId={item.get('publishId')}" if item.get('publishId') else "链接缺失"
-            report_content += f"> - **标题:** {item.get('name', 'N/A')}\n"
-            report_content += f"> - **发布:** {item.get('publishDate', 'N/A')}\n"
-            report_content += f"> - **链接:** [查看详情]({link})\n\n"
+            report_content += format_item_details(item)
 
     if removed_items:
-        report_content += f"### 删除/失效条目 ({len(removed_items)}): \n"
+        report_content += f"### [-] 删除/失效条目 ({len(removed_items)}): \n"
         for item in removed_items:
-            report_content += f"> - **标题:** {item.get('name', 'N/A')}\n"
-            report_content += f"> - **发布:** {item.get('publishDate', 'N/A')}\n\n"
+            report_content += format_item_details(item) # 仍使用相同格式展示历史数据
 
-    # 添加 Actions 日志链接
+    # 添加 Actions 日志链接 (保持不变)
     run_url = f"{os.environ.get('GITHUB_SERVER_URL', '')}/{os.environ.get('GITHUB_REPOSITORY', '')}/actions/runs/{os.environ.get('GITHUB_RUN_ID', '')}"
     report_content += f"\n---\n[查看完整运行日志]({run_url})"
     
