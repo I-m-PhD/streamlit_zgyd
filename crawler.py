@@ -66,10 +66,26 @@ def save_metadata(metadata):
 
 # --- Server Chan Push and GitHub State Management ---
 
-def send_server_chan_notification(server_chan_url, content_md):
-    """发送 Markdown 格式的 Server 酱通知到个人微信。"""
-    if not server_chan_url:
-        print("[-] Server Chan URL 未配置 (WECHAT_WEBHOOK_URL)，跳过推送。")
+def parse_server_chan_urls(urls_string):
+    """
+    解析分号 ';' 分隔的 Server 酱 URL 字符串，返回 URL 列表。
+    兼容单个 URL 或多个 URL 的情况。
+    """
+    if not urls_string:
+        return []
+    # 使用分号分隔，并去除每个 URL 两边的空白
+    return [url.strip() for url in urls_string.split(';') if url.strip()]
+
+def send_server_chan_notification(server_chan_urls_list, content_md):
+    """
+    遍历 Server 酱 URL 列表，向所有接收者发送 Markdown 格式的通知。
+    
+    Args:
+        server_chan_urls_list (list): 包含所有接收者 Server 酱 URL 的列表。
+        content_md (str): Markdown 格式的消息内容。
+    """
+    if not server_chan_urls_list:
+        print("[-] Server Chan URL 列表为空，跳过推送。")
         return
 
     payload = {
@@ -78,18 +94,24 @@ def send_server_chan_notification(server_chan_url, content_md):
         "desp": content_md 
     }
     
-    try:
-        response = requests.post(server_chan_url, data=payload, timeout=10)
-        response.raise_for_status()
+    # 遍历所有 URL 并逐个发送
+    for i, url in enumerate(server_chan_urls_list):
+        # 截断 URL 以保护隐私，仅打印开头部分
+        display_url = url[:40] + "..." if len(url) > 40 else url
+        print(f"[*] 正在尝试推送至接收者 #{i+1} ({display_url})...")
         
-        result = response.json()
-        if result.get("code") == 0:
-            print("[+] Server 酱推送成功。")
-        else:
-            print(f"[-] Server 酱推送失败，错误信息: {result.get('message')}")
+        try:
+            response = requests.post(url, data=payload, timeout=10)
+            response.raise_for_status()
             
-    except requests.exceptions.RequestException as e:
-        print(f"[-] Server 酱网络请求失败: {e}")
+            result = response.json()
+            if result.get("code") == 0:
+                print(f"[+] 接收者 #{i+1} 推送成功。")
+            else:
+                print(f"[-] 接收者 #{i+1} 推送失败，错误信息: {result.get('message')}")
+                
+        except requests.exceptions.RequestException as e:
+            print(f"[-] 接收者 #{i+1} 网络请求失败: {e}")
 
 def setup_github(repo_full_name, github_pat):
     """
@@ -323,14 +345,20 @@ def run_crawler_job(task_key):
     if task_key == "TASK_3":
         
         GITHUB_PAT = os.environ.get("CLOUDFLARE_WORKER")
-        SERVER_CHAN_URL = os.environ.get("WECHAT_WEBHOOK_URL")
+        
+        # 从环境变量获取原始 URL 字符串
+        server_chan_urls_str = os.environ.get("WECHAT_WEBHOOK_URL")
+        
+        # 解析 URL 字符串为列表
+        server_chan_url_list = parse_server_chan_urls(server_chan_urls_str)
         
         # 从 wrangler.toml 注入的 Env Vars (通过 scheduler.yml)
         REPO_OWNER = os.environ.get("GITHUB_OWNER")
         REPO_NAME = os.environ.get("GITHUB_REPO")
         
-        if not GITHUB_PAT or not SERVER_CHAN_URL:
-            print("TASK_3 缺少推送所需的 Secrets。")
+        # 现在只需要检查 GITHUB_PAT 和 URL 列表是否为空
+        if not GITHUB_PAT or not server_chan_url_list:
+            print("TASK_3 缺少推送所需的 Secrets (GITHUB_PAT) 或 WECHAT_WEBHOOK_URL。跳过推送。")
             # 即使缺少 Secrets，仍允许保存本地文件供 Streamlit 使用
             pass
         else:
@@ -352,8 +380,8 @@ def run_crawler_job(task_key):
                     # 生成 Markdown 报告
                     report_content = format_markdown_report(added_items, removed_items)
 
-                    # 发送 Server 酱推送
-                    send_server_chan_notification(SERVER_CHAN_URL, report_content)
+                    # 调用新的推送函数，传入 URL 列表
+                    send_server_chan_notification(server_chan_url_list, report_content)
 
                     # 4. 提交新状态数据 (覆盖旧状态文件) - 使用 PyGithub
                     commit_new_state(repo, new_data, TASK_3_STATE_PATH)
