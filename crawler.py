@@ -11,7 +11,7 @@ BASE_URL = 'https://b2b.10086.cn'
 POST_URL = f'{BASE_URL}/api-b2b/api-sync-es/white_list_api/b2b/publish/queryList'
 OUTPUT_DIR = "./zgyd"
 METADATA_PATH = os.path.join(OUTPUT_DIR, "metadata.json")
-TASK_3_STATE_PATH = "task_3_state.json"  # 状态文件路径：用于 TASK 3 的差异对比
+TASK_3_STATE_PATH = os.path.join(OUTPUT_DIR, "task_3_state.json")  # 状态文件路径：用于 TASK 3 的差异对比
 
 # 定义所有需要采集的任务配置
 TASK_CONFIG = {
