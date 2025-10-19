@@ -158,17 +158,46 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     if data_name == "所有招采_正在招标_北京":
         # st.subheader("3. 原始数据表")
 
+        # 1. 定义 BASE_URL 
+        BASE_URL = 'https://b2b.10086.cn'
+        
+        # 2. 【精确复制 crawler.py 逻辑】构造 URL 字段，并确保 None/NaN 转换为空字符串
+        def build_link_safely(row):
+            # 这是一个强健的函数，用于处理 Series 中的 None/NaN，确保 URL 参数中不会出现 'None' 字符串
+            def safe_param(key):
+                value = row.get(key)
+                # 使用 pd.notna 检查非空值，并转换为字符串
+                if pd.notna(value) and value is not None:
+                    return str(value)
+                # 否则返回空字符串，与 crawler.py 中的 .get(key, '') 效果一致
+                return ''
+
+            # 精确使用 crawler.py 中的字段名
+            link_id = safe_param('id')
+            link_uuid = safe_param('uuid')
+            link_publish_type = safe_param('publishType')
+            link_publish_one_type = safe_param('publishOneType')
+            
+            # 构造 URL (与 crawler.py 模板完全一致)
+            return (
+                f'{BASE_URL}/#/noticeDetail?'
+                f'publishId={link_id}&'
+                f'publishUuid={link_uuid}&'
+                f'publishType={link_publish_type}&'
+                f'publishOneType={link_publish_one_type}'
+            )
+
+        # 应用新的构建函数
+        df['LINK'] = df.apply(build_link_safely, axis=1)
+
         required_cols_map = {
             'companyTypeName': '单位',
             'name': '标题',
+            'LINK': '链接',
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
             'publicityEndTime': '公示截止时间',
-            'backDate': '截标时间',
-            'id': 'id',
-            'uuid': 'uuid',
-            'publishType': 'publishType',
-            'publishOneType': 'publishOneType',
+            'backDate': '截标时间'
         }
 
         available_cols = [col for col in required_cols_map.keys() if col in df.columns]
