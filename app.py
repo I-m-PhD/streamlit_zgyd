@@ -209,9 +209,8 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             use_container_width=True, 
             height=600,
             column_config={
+                # 仅保留 link_column，这是 LinkColumn 必需的最小配置
                 "标题": st.column_config.LinkColumn(
-                    help="点击查看项目详情",
-                    # 关键：指定 URL 来源列
                     link_column='详情链接'
                 ),
                 # 隐藏用于提供 URL 的 '详情链接' 列
