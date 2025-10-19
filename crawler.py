@@ -231,8 +231,8 @@ def format_markdown_report(added_items, removed_items):
         item_md += f"> - **标题:** {item.get('name', 'N/A')}\n"
         item_md += f"> - **发布时间:** {item.get('publishDate', 'N/A')}\n"
         item_md += f"> - **文件售卖截止时间:** {item.get('tenderSaleDeadline', 'N/A')}\n"
-        item_md += f"> - **截标时间:** {item.get('publicityEndTime', 'N/A')}\n"
-        item_md += f"> - **回退时间:** {item.get('backDate', 'N/A')}\n"
+        item_md += f"> - **公示截止时间:** {item.get('publicityEndTime', 'N/A')}\n"
+        item_md += f"> - **截标时间:** {item.get('backDate', 'N/A')}\n"
         # 链接文本统一为“点击查看”
         item_md += f"> - **详情链接:** [点击查看]({link})\n\n"
         return item_md

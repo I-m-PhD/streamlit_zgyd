@@ -158,15 +158,37 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     if data_name == "所有招采_正在招标_北京":
         # st.subheader("3. 原始数据表")
 
+        # 1. 定义 BASE_URL，用于构造链接 (与 crawler.py 保持一致)
+        BASE_URL = 'https://b2b.10086.cn'
+        
+        # 2. 构造完整的 URL 字段
+        # 注意：使用 .apply(lambda row: ...) 构造链接
+        # 确保所有用于构造链接的字段都在 df 中，如果字段缺失，链接会包含 None 或空字符串。
+        try:
+            df['link'] = df.apply(
+                lambda row: f'{BASE_URL}/#/noticeDetail?'
+                            f'publishId={row.get("publishId", "")}&'
+                            f'publishUuid={row.get("uuid", "")}&'
+                            f'publishType={row.get("publishType", "")}&'
+                            f'publishOneType={row.get("publishOneType", "")}',
+                axis=1
+            )
+        except Exception as e:
+            st.error(f"无法构造链接字段，请检查原始数据结构: {e}")
+            return
+
         required_cols_map = {
+            # 将 'link' 字段添加到映射中，并命名为 '详情链接' (LinkColumn将隐藏此列名)
+            'link': '详情链接',
             'companyTypeName': '单位',
             'name': '标题',
             'publishDate': '发布时间',
             'tenderSaleDeadline': '文件售卖截止时间',
-            'publicityEndTime': '截标时间',
-            'backDate': '回退时间'
+            'publicityEndTime': '公示截止时间',
+            'backDate': '截标时间'
         }
 
+        # 确保 'link' 字段已添加到可用列
         available_cols = [col for col in required_cols_map.keys() if col in df.columns]
 
         if not available_cols:
@@ -174,12 +196,32 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             return
 
         rename_map = {col: required_cols_map[col] for col in available_cols}
+
+        # 3. 构造用于展示的 DataFrame (包含 link 字段)
         display_df = df[available_cols].rename(columns=rename_map)
 
         if '发布时间' in display_df.columns:
             display_df = display_df.sort_values(by='发布时间', ascending=False)
 
-        st.dataframe(display_df, use_container_width=True, height=600)
+        # 4. 使用 st.dataframe 和 column_config 设置超链接
+        st.dataframe(
+            display_df, 
+            use_container_width=True, 
+            height=600,
+            column_config={
+                "标题": st.column_config.LinkColumn(
+                    "标题", # 标题作为显示文本
+                    # link_column 必须指向包含 URL 的列名
+                    help="点击查看项目详情",
+                    # 关键：指定哪一列包含了超链接的 URL。
+                    # '详情链接' 是我们通过 rename_map 构造的 'link' 列的新名字
+                    link_column='详情链接', 
+                    display_text='点击查看' # 可选：链接的显示文本，这里使用默认的标题即可
+                ),
+                # 隐藏用于提供 URL 的 '详情链接' 列
+                "详情链接": None 
+            }
+        )
 
 
 # --- MAIN APPLICATION ENTRY POINT ---
