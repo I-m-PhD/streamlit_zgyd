@@ -3,13 +3,8 @@
 name: Scheduled Crawler
 
 on:
-  # ----------------------------------------------------
-  # 核心修改：移除原生的 'schedule' 触发器。
-  # Cloudflare Worker 将通过下面的 'workflow_dispatch' 触发器来替代它。
-  # ----------------------------------------------------
   workflow_dispatch:
     inputs:
-      # 此名称必须与 worker/index.js 中传递的参数名一致
       task_to_run:
         description: 'Scheduled Task ID (TASK_1, TASK_2, or TASK_3) or Manual Run'
         required: true
@@ -21,59 +16,71 @@ on:
           - TASK_3
 
 permissions:
-  contents: write # 授予写入权限用于提交数据 (用于 git-auto-commit-action)
+  contents: write # 授予写入权限用于提交数据 (用于 PyGithub commit 和 git-auto-commit-action)
 
 jobs:
-  # ----------------------------------------------------
-  # T1: 任务 1 Job 定义 (每日一次)
-  # ----------------------------------------------------
+  # T1: 任务 1 Job 定义 (保持不变)
   run_task_1:
     name: "TASK 1: 所有招采"
     runs-on: ubuntu-latest
-    # 核心修改：if 条件现在仅依赖 workflow_dispatch 传入的参数。
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_1'
-
     steps:
       - name: Checkout code for Local Action Access
         uses: actions/checkout@v5
-
       - name: Execute Composite Action for TASK_1
         uses: ./.github/actions/sop
         with:
           task_name: TASK_1
 
-  # ----------------------------------------------------
-  # T2: 任务 2 Job 定义 (每 4 小时一次)
-  # ----------------------------------------------------
+  # T2: 任务 2 Job 定义 (保持不变)
   run_task_2:
     name: "TASK 2: 正在招标"
     runs-on: ubuntu-latest
-    # 核心修改：if 条件现在仅依赖 workflow_dispatch 传入的参数。
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2'
-
     steps:
       - name: Checkout code for Local Action Access
         uses: actions/checkout@v5
-
       - name: Execute Composite Action for TASK_2
         uses: ./.github/actions/sop
         with:
           task_name: TASK_2
 
-  # ----------------------------------------------------
-  # T3: 任务 3 Job 定义 (每 30 分钟一次)
-  # ----------------------------------------------------
+  # T3: 任务 3 Job 定义 (重构为差异化推送)
   run_task_3:
-    name: "TASK 3: 正在招标_北京"
+    name: "TASK 3: 正在招标_北京 (差异化推送)"
     runs-on: ubuntu-latest
-    # 核心修改：if 条件现在仅依赖 workflow_dispatch 传入的参数。
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3'
-
+      
     steps:
-      - name: Checkout code for Local Action Access
+      - name: Checkout code (Fetch Full History for PyGithub)
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # 允许 PyGithub 获取旧状态并提交新状态
 
-      - name: Execute Composite Action for TASK_3
+      - name: Setup Python and Install dependencies
+        # 重用 sop Action 的 Python 设置和依赖安装步骤
+        # 只执行 setup-python 和 pip install -r requirements.txt
         uses: ./.github/actions/sop
         with:
-          task_name: TASK_3
+          task_name: DUMMY # 传递一个虚拟任务名以满足输入要求，但不会执行其最终的 git-auto-commit
+
+      - name: Run Crawler, Compare, and Push (TASK 3)
+        shell: bash
+        run: python crawler.py TASK_3
+        env:
+          # 注入 Secrets 供 crawler.py 访问
+          CLOUDFLARE_WORKER: ${{ secrets.CLOUDFLARE_WORKER }} # GitHub PAT
+          WECHAT_WEBHOOK_URL: ${{ secrets.WECHAT_WEBHOOK_URL }} # Server Chan API URL
+          GITHUB_OWNER: ${{ github.repository_owner }} 
+          GITHUB_REPO: ${{ github.event.repository.name }}
+
+      - name: Commit and Push Local Data Files (for Streamlit)
+        # 提交 Streamlit 需要的 zgyd 目录文件。
+        # task_3_state.json 已在 crawler.py 中通过 PyGithub/PAT 提交，此步骤不会影响它。
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "SCHEDULER: Auto-update data [TASK_3] for Streamlit."
+          file_pattern: 'zgyd/*.json zgyd/metadata.json'
+          commit_user_name: 'github-actions[bot]'
+          commit_user_email: 'github-actions[bot]@users.noreply.github.com'
+          push_options: '--force-with-lease'
