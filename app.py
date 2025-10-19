@@ -160,6 +160,9 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             automargin=True # 保持自动调整边距以适应轴刻度标签
         )
         fig_heatmap.update_layout(
+            margin=dict(l=30)  # l: left margin (左边距), 单位是像素 (px)
+        )
+        fig_heatmap.update_layout(
             # 将颜色条放置在图表顶部
             coloraxis_colorbar=dict(
                 orientation="h",  # H: Horizontal (水平) 或 V: Vertical (垂直)
