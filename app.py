@@ -140,7 +140,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     col1, col2 = st.columns(2)
     with col1:
         time_df_hour = df.groupby('PublishHour', observed=True)['PublishDateTime'].count().reset_index(name='UpdateCount')
-        fig_hour = px.bar(time_df_hour, x='PublishHour', y='UpdateCount', title='全时段更新活跃度', labels={'PublishHour': '时刻 (0-23)', 'UpdateCount': '更新频次'}, height=400)
+        fig_hour = px.bar(time_df_hour, x='PublishHour', y='UpdateCount', title='更新活时段', labels={'PublishHour': '时刻 (0-23)', 'UpdateCount': '更新频次'}, height=400)
         fig_hour.update_layout(xaxis={'tickmode': 'linear', 'dtick': 1, 'range': [-0.5, 23.5]})
         st.plotly_chart(fig_hour, use_container_width=True)
     with col2:
@@ -149,7 +149,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         index = pd.MultiIndex.from_product([hour_order, day_order], names=['PublishHour', 'PublishDayOfWeek'])
         time_df_heatmap = time_df_heatmap.set_index(['PublishHour', 'PublishDayOfWeek']).reindex(index, fill_value=0).reset_index()
         time_df_heatmap['PublishDayOfWeek'] = pd.Categorical(time_df_heatmap['PublishDayOfWeek'], categories=day_order, ordered=True)
-        fig_heatmap = px.density_heatmap(time_df_heatmap, x="PublishHour", y="PublishDayOfWeek", z="UpdateCount", title='更新活跃度: 时刻 vs. 周几', labels={"PublishHour": "时刻", "PublishDayOfWeek": "周几", "UpdateCount": "更新频次"}, category_orders={"PublishDayOfWeek": day_order, "PublishHour": hour_order}, nbinsx=24, color_continuous_scale=px.colors.sequential.Viridis, height=400)
+        fig_heatmap = px.density_heatmap(time_df_heatmap, x="PublishHour", y="PublishDayOfWeek", z="UpdateCount", title='更新活跃时段 vs. 周几', labels={"PublishHour": "时刻", "PublishDayOfWeek": "周几", "UpdateCount": "更新频次"}, category_orders={"PublishDayOfWeek": day_order, "PublishHour": hour_order}, nbinsx=24, color_continuous_scale=px.colors.sequential.Viridis, height=400)
         fig_heatmap.update_xaxes(range=[-0.5, 23.5], tickmode='linear', dtick=1)
         st.plotly_chart(fig_heatmap, use_container_width=True)
 
