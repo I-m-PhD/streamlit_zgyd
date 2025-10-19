@@ -19,7 +19,7 @@ permissions:
   contents: write # 授予写入权限用于提交数据 (用于 PyGithub commit 和 git-auto-commit-action)
 
 jobs:
-  # T1: 任务 1 Job 定义 (保持不变)
+  # T1: 任务 1 Job 定义
   run_task_1:
     name: "TASK 1: 所有招采"
     runs-on: ubuntu-latest
@@ -32,9 +32,9 @@ jobs:
         with:
           task_name: TASK_1
 
-  # T2: 任务 2 Job 定义 (保持不变)
+  # T2: 任务 2 Job 定义
   run_task_2:
-    name: "TASK 2: 正在招标"
+    name: "TASK 2: 所有招采_正在招标"
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_2'
     steps:
@@ -47,7 +47,7 @@ jobs:
 
   # T3: 任务 3 Job 定义 (重构为差异化推送)
   run_task_3:
-    name: "TASK 3: 正在招标_北京 (差异化推送)"
+    name: "TASK 3: 所有招采_正在招标_北京"
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3'
       
