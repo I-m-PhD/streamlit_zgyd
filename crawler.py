@@ -4,7 +4,7 @@ import random, requests, ssl, time, json, os, sys
 from requests.adapters import HTTPAdapter
 from datetime import datetime
 import pytz
-from github import Github, InputGitAuthor
+from github import Github, InputGitAuthor, UnknownObjectException
 
 # --- CONFIGURATION ---
 BASE_URL = 'https://b2b.10086.cn'
@@ -91,14 +91,27 @@ def send_server_chan_notification(server_chan_url, content_md):
     except requests.exceptions.RequestException as e:
         print(f"[-] Server 酱网络请求失败: {e}")
 
-def setup_github(repo_name, pat_token):
-    """初始化 PyGithub 客户端和仓库对象"""
+def setup_github():
+    """初始化 GitHub 客户端"""
+    pat_token = os.environ.get('CLOUDFLARE_WORKER')
+    
+    # *** 新增：打印 Token 状态 ***
+    if not pat_token:
+        print("[-] FATAL ERROR: CLOUDFLARE_WORKER 环境变量为空，PyGithub 初始化失败！")
+        return None
+    
+    # 打印长度以确认是否读取到 Secret
+    print(f"[+] CLOUDFLARE_WORKER Token 已读取，长度为: {len(pat_token.strip())}")
+    
     try:
-        g = Github(pat_token)
-        repo = g.get_repo(repo_name)
-        return repo
+        # 使用 strip() 移除可能的空白字符和换行符
+        g = Github(pat_token.strip()) 
+        # 尝试执行一个简单的API操作（如获取用户）来验证Token
+        g.get_user() 
+        print("[+] PyGithub 客户端初始化成功并验证通过。")
+        return g
     except Exception as e:
-        print(f"[-] GitHub 初始化失败: {e}。请检查 CLOUDFLARE_WORKER 权限和值。")
+        print(f"[-] FATAL ERROR: PyGithub 认证失败，请检查 Token。错误信息: {e}")
         return None
 
 def get_old_data_from_repo(repo, file_path):
@@ -117,29 +130,45 @@ def commit_new_state(repo, new_data_list, file_path):
     new_data_content = json.dumps(new_data_list, ensure_ascii=False, indent=4)
     commit_message = f"[Scheduler] 自动更新 TASK_3 状态数据: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     
-    # 使用 GitHub Actions Bot 作为提交者
+    # 使用 GitHub Actions Bot 身份
     author = InputGitAuthor("github-actions[bot]", "41898282+github-actions[bot]@users.noreply.github.com")
 
+    # 尝试获取旧文件 SHA，以便进行更新操作
+    contents = None
     try:
-        # 尝试获取旧文件 SHA，以便进行更新操作
         contents = repo.get_contents(file_path)
-        repo.update_file(
-            path=file_path, 
-            message=commit_message, 
-            content=new_data_content, 
-            sha=contents.sha,
-            author=author
-        )
-        print(f"[+] 新状态数据已提交到 {file_path}")
-    except Exception:
-        # 如果文件不存在，则创建新文件
-        repo.create_file(
-            path=file_path, 
-            message=commit_message, 
-            content=new_data_content,
-            author=author
-        )
-        print(f"[+] 新状态文件 {file_path} 已创建。")
+    except UnknownObjectException:
+        # 文件不存在，正常情况，继续到创建文件步骤
+        pass
+    except Exception as e:
+        # 捕获其他读取错误（如权限不足）
+        print(f"[-] ERROR: 尝试读取旧状态文件 {file_path} 失败！错误信息: {e}")
+
+    try:
+        if contents:
+            # 文件存在，执行更新操作
+            repo.update_file(
+                path=file_path, 
+                message=commit_message, 
+                content=new_data_content, 
+                sha=contents.sha,
+                author=author
+            )
+            print(f"[+] 新状态数据已更新到 {file_path}")
+        else:
+            # 文件不存在，执行创建操作
+            repo.create_file(
+                path=file_path, 
+                message=commit_message, 
+                content=new_data_content,
+                author=author
+            )
+            print(f"[+] 新状态文件 {file_path} 已创建。")
+    except Exception as commit_e:
+        # *** 关键修复：捕获提交API级别的失败，并明确报错 ***
+        print(f"[-] FATAL ERROR: 提交状态文件 {file_path} 失败！")
+        print(f"[-] 错误信息: {commit_e}")
+        print("[-] 请检查 CLOUDFLARE_WORKER (GitHub PAT) 是否拥有 contents:write 或 repo 权限。")
 
 def compare_data_and_generate_report(new_data, old_data):
     """对比新旧数据，返回新增和删除的列表"""
