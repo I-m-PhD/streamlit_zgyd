@@ -162,14 +162,22 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         BASE_URL = 'https://b2b.10086.cn'
         
         # 2. 【新增逻辑】构造纯 URL 字符串列
-        df['URL_LINK'] = df.apply(
-            lambda row: f'{BASE_URL}/#/noticeDetail?'
-                        f'publishId={row.get("publishId", "")}&'
-                        f'publishUuid={row.get("uuid", "")}&'
-                        f'publishType={row.get("publishType", "")}&'
-                        f'publishOneType={row.get("publishOneType", "")}',
-            axis=1
-        )
+        def build_link(row):
+            # 确保使用 crawler.py 中使用的准确字段名
+            link_id = row.get('publishId', '')
+            link_uuid = row.get('uuid', '')
+            link_publish_type = row.get('publishType', '')
+            link_publish_one_type = row.get('publishOneType', '')
+            
+            return (
+                f'{BASE_URL}/#/noticeDetail?'
+                f'publishId={link_id}&'
+                f'publishUuid={link_uuid}&'
+                f'publishType={link_publish_type}&'
+                f'publishOneType={link_publish_one_type}'
+            )
+
+        df['URL_LINK'] = df.apply(build_link, axis=1)
 
         required_cols_map = {
             'companyTypeName': '单位',
