@@ -215,8 +215,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
                     help="点击查看项目详情",
                     # 关键：指定哪一列包含了超链接的 URL。
                     # '详情链接' 是我们通过 rename_map 构造的 'link' 列的新名字
-                    link_column='详情链接', 
-                    display_text='点击查看' # 可选：链接的显示文本，这里使用默认的标题即可
+                    link_column='详情链接'
                 ),
                 # 隐藏用于提供 URL 的 '详情链接' 列
                 "详情链接": None 
