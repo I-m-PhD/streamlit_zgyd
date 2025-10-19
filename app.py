@@ -140,7 +140,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     col1, col2 = st.columns(2)
     with col1:
         time_df_hour = df.groupby('PublishHour', observed=True)['PublishDateTime'].count().reset_index(name='UpdateCount')
-        fig_hour = px.bar(time_df_hour, x='PublishHour', y='UpdateCount', title='更新活时段', labels={'PublishHour': '时刻 (0-23)', 'UpdateCount': '更新频次'}, height=400)
+        fig_hour = px.bar(time_df_hour, x='PublishHour', y='UpdateCount', title='更新活跃时段', labels={'PublishHour': '时刻 (0-23)', 'UpdateCount': '更新频次'}, height=400)
         fig_hour.update_layout(xaxis={'tickmode': 'linear', 'dtick': 1, 'range': [-0.5, 23.5]})
         st.plotly_chart(fig_hour, use_container_width=True)
     with col2:
