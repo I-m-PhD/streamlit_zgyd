@@ -25,6 +25,7 @@ TASK_UPDATE_SCHEDULES = {
     "TASK_3": "每日 08:00-23:59 (当日), 06:00-07:59 (次日) 整点 15 分, 45 分更新",
 }
 
+
 # --- METADATA AND DATA LOADING ---
 
 def load_metadata():
@@ -37,6 +38,7 @@ def load_metadata():
             return {}
     return {}
 
+
 def load_data(task_name):
     """Loads data from a local JSON file."""
     output_path = os.path.join(OUTPUT_DIR, f"{task_name}.json")
@@ -48,15 +50,17 @@ def load_data(task_name):
             return None
     return None
 
+
 # --- DATA ANALYSIS AND PLOTTING FUNCTION ---
 
 # Setting plotly template
 pio.templates.default = "plotly_dark"
 
+
 def show_statistics(all_content, data_name, crawl_time, task_key):
 
-    st.markdown("---")
-    st.header(f"{data_name}")
+    # st.markdown("---")
+    # st.header(f"{data_name}")
 
     # 获取记录总数
     record_count = len(all_content) if all_content is not None else 0
@@ -246,15 +250,34 @@ def main():
 
     metadata = load_metadata()
 
-    # 遍历所有任务配置
-    for task_key in TASK_CONFIG.keys():
-        config = TASK_CONFIG[task_key]
-        task_name = config["name"]
+    # # 遍历所有任务配置
+    # for task_key in TASK_CONFIG.keys():
+    #     config = TASK_CONFIG[task_key]
+    #     task_name = config["name"]
 
-        crawl_time = metadata.get(task_name)
-        raw_data = load_data(task_name)
+    #     crawl_time = metadata.get(task_name)
+    #     raw_data = load_data(task_name)
 
-        show_statistics(raw_data, task_name, crawl_time, task_key)
+    #     show_statistics(raw_data, task_name, crawl_time, task_key)
+
+    # 按照 TASK_CONFIG 的顺序创建 Tabs 列表
+    task_keys = list(TASK_CONFIG.keys())
+    tab_names = [TASK_CONFIG[key]["name"] for key in task_keys]
+    
+    # 创建 Streamlit Tabs
+    tabs = st.tabs(tab_names)
+
+    # 遍历所有任务配置，并在各自的 Tab 内调用 show_statistics
+    for i, task_key in enumerate(task_keys):
+        with tabs[i]:
+            config = TASK_CONFIG[task_key]
+            task_name = config["name"]
+
+            crawl_time = metadata.get(task_name)
+            raw_data = load_data(task_name)
+
+            # 在 Tab 内部调用 show_statistics，它将渲染所有内容
+            show_statistics(raw_data, task_name, crawl_time, task_key)
 
 
 if __name__ == "__main__":
