@@ -140,7 +140,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     frequency_df = frequency_df.sort_values('PublishDate')
     fig_freq = px.bar(frequency_df, x='PublishDate', y='UpdateCount', title='每日更新频次', labels={'UpdateCount': '更新频次', 'PublishDate': '日期', 'PublishDayOfWeek': '周几'}, hover_data=['PublishDayOfWeek'], height=500)
     fig_freq.update_xaxes(tickangle=-45, rangeslider_visible=True, rangeselector=dict(bgcolor="#333333", activecolor="#555555", font=dict(color="white"), buttons=[dict(count=7, label="1周", step="day", stepmode="backward"), dict(count=1, label="1月", step="month", stepmode="backward"), dict(count=3, label="1季", step="month", stepmode="backward"), dict(count=1, label="1年", step="year", stepmode="backward"), dict(step="all", label="全部")]), tickformat="%Y-%m-%d")
-    st.plotly_chart(fig_freq, use_container_width=True)
+    st.plotly_chart(fig_freq, width='stretch')
 
     # st.subheader("2. 更新活跃度分析")
     col1, col2 = st.columns(2)
@@ -148,7 +148,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         time_df_hour = df.groupby('PublishHour', observed=True)['PublishDateTime'].count().reset_index(name='UpdateCount')
         fig_hour = px.bar(time_df_hour, x='PublishHour', y='UpdateCount', title='更新活跃时段', labels={'PublishHour': '时刻', 'UpdateCount': '更新频次'}, height=400)
         fig_hour.update_layout(xaxis={'tickmode': 'linear', 'dtick': 1, 'range': [-0.5, 23.5]})
-        st.plotly_chart(fig_hour, use_container_width=True)
+        st.plotly_chart(fig_hour, width='stretch')
     with col2:
         hour_order = list(range(24))
         time_df_heatmap = df.groupby(['PublishHour', 'PublishDayOfWeek'], observed=True).size().reset_index(name='UpdateCount')
@@ -168,7 +168,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             ),
             coloraxis_colorbar_title_text='更新频次'  # 去掉 "sum of"
         )
-        st.plotly_chart(fig_heatmap, use_container_width=True)
+        st.plotly_chart(fig_heatmap, width='stretch')
 
 
     # 3. 原始数据表格 (仅限北京) 
@@ -235,7 +235,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         # 3. 【渲染逻辑】使用 st.dataframe，并应用最简 LinkColumn 配置
         st.dataframe(
             display_df, 
-            use_container_width=True, 
+            width='stretch', 
             height=600,
             column_config={
                 "链接": st.column_config.LinkColumn(
