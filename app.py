@@ -244,7 +244,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
                     width="small", 
                     # 显式添加一个 help 文本，以确保 LinkColumn 实例被创建和应用
                     help="点击查看项目详情链接",
-                    display_text="点击查看"
+                    display_text=":material/open_in_new:"
                 )
             }
         )
