@@ -162,7 +162,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             coloraxis_colorbar=dict(
                 orientation="h",  # horizontal or vertical
                 x=1,              # X轴位置，0 是最左，1 是最右
-                y=1.35,           # Y轴位置，0 是底部，1 是顶部 (超出范围表示在图表区域外部)
+                y=1.33,           # Y轴位置，0 是底部，1 是顶部 (超出范围表示在图表区域外部)
                 yanchor="top",    # 确保定位是基于颜色条的顶部
                 xanchor="right",  # 确保颜色条居右对齐
             ),
