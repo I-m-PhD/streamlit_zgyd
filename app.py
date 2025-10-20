@@ -239,7 +239,6 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             height=600,
             column_config={
                 "链接": st.column_config.LinkColumn(
-                    width="small", 
                     help="点击查看项目详情链接",
                     # display_text=":material/open_in_new:"
                     display_text="打开"
