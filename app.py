@@ -146,7 +146,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     col1, col2 = st.columns(2)
     with col1:
         time_df_hour = df.groupby('PublishHour', observed=True)['PublishDateTime'].count().reset_index(name='UpdateCount')
-        fig_hour = px.bar(time_df_hour, x='PublishHour', y='UpdateCount', title='更新活跃时段', labels={'PublishHour': '时刻 (0-23)', 'UpdateCount': '更新频次'}, height=400)
+        fig_hour = px.bar(time_df_hour, x='PublishHour', y='UpdateCount', title='更新活跃时段', labels={'PublishHour': '时刻', 'UpdateCount': '更新频次'}, height=400)
         fig_hour.update_layout(xaxis={'tickmode': 'linear', 'dtick': 1, 'range': [-0.5, 23.5]})
         st.plotly_chart(fig_hour, use_container_width=True)
     with col2:
@@ -160,9 +160,9 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         fig_heatmap.update_layout(
             # 将颜色条放置在图表顶部
             coloraxis_colorbar=dict(
-                orientation="h",  # H: Horizontal (水平) 或 V: Vertical (垂直)
+                orientation="h",  # horizontal or vertical
                 x=1,              # X轴位置，0 是最左，1 是最右
-                y=1.35,            # Y轴位置，0 是底部，1 是顶部 (负值表示在图表区域外部)
+                y=1.35,           # Y轴位置，0 是底部，1 是顶部 (超出范围表示在图表区域外部)
                 yanchor="top",    # 确保定位是基于颜色条的顶部
                 xanchor="right",  # 确保颜色条居右对齐
             ),
@@ -171,7 +171,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         st.plotly_chart(fig_heatmap, use_container_width=True)
 
 
-    # --- 3. 原始数据表格 (仅限北京) ---
+    # 3. 原始数据表格 (仅限北京) 
     if data_name == "所有招采_正在招标_北京":
         # st.subheader("3. 原始数据表")
 
