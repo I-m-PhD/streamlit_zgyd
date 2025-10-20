@@ -155,7 +155,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         index = pd.MultiIndex.from_product([hour_order, day_order], names=['PublishHour', 'PublishDayOfWeek'])
         time_df_heatmap = time_df_heatmap.set_index(['PublishHour', 'PublishDayOfWeek']).reindex(index, fill_value=0).reset_index()
         time_df_heatmap['PublishDayOfWeek'] = pd.Categorical(time_df_heatmap['PublishDayOfWeek'], categories=day_order, ordered=True)
-        fig_heatmap = px.density_heatmap(time_df_heatmap, x="PublishHour", y="PublishDayOfWeek", z="UpdateCount", title='更新活跃热力图', labels={"PublishHour": "时刻", "PublishDayOfWeek": "周几", "UpdateCount": "更新频次"}, category_orders={"PublishDayOfWeek": day_order, "PublishHour": hour_order}, nbinsx=24, color_continuous_scale=px.colors.sequential.Viridis, height=400)
+        fig_heatmap = px.density_heatmap(time_df_heatmap, x="PublishHour", y="PublishDayOfWeek", z="UpdateCount", title='更新活跃热力图', labels={"PublishHour": "时刻", "PublishDayOfWeek": "", "UpdateCount": "更新频次"}, category_orders={"PublishDayOfWeek": day_order, "PublishHour": hour_order}, nbinsx=24, color_continuous_scale=px.colors.sequential.Viridis, height=400)
         fig_heatmap.update_xaxes(range=[-0.5, 23.5], tickmode='linear', dtick=1)
         fig_heatmap.update_layout(
             # 将颜色条放置在图表顶部
@@ -165,7 +165,8 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
                 y=1.35,            # Y轴位置，0 是底部，1 是顶部 (负值表示在图表区域外部)
                 yanchor="top",    # 确保定位是基于颜色条的顶部
                 xanchor="right",  # 确保颜色条居右对齐
-            )
+            ),
+            coloraxis_colorbar_title_text='更新频次'  # 去掉 "sum of"
         )
         st.plotly_chart(fig_heatmap, use_container_width=True)
 
