@@ -1,12 +1,11 @@
 // worker/index.js
-// Cloudflare Workers - Multi-Task GitHub Actions Trigger
 
 // 任务映射表：将 Cron 表达式与 {id: 文件名, input: Actions参数} 关联起来
 // Cron 表达式已精确转换为 UTC 时间
 const CRON_TO_WORKFLOW = {
     // =========================================================================
     // 1. cleaner.yml
-    "0 19 * * 7": { 
+    "0 19 * * *": { 
         id: "cleaner.yml", 
         description: "Weekly Cleanup (cleaner.yml)",
         input: {} // 清理任务无需额外参数

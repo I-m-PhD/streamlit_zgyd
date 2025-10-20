@@ -1,6 +1,6 @@
 # .github/actions/sop/action.yml
 
-name: 'Setup, Run Crawler, and Commit Data'
+name: 'Setup, Run Crawler, Commit Data'
 description: 'Sets up environment, runs the specified crawler task, and commits the results.'
 
 inputs:
