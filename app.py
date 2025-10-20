@@ -256,7 +256,7 @@ def main():
     )
 
     st.title("招采数据监控")
-    st.info("通过 Cloudflare Worker 定时触发 GitHub Actions 自动更新")
+    # st.info("通过 Cloudflare Worker 定时触发 GitHub Actions 自动更新")
 
     metadata = load_metadata()
 
