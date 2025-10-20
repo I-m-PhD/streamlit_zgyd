@@ -133,6 +133,13 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     day_order = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
     df['PublishDayOfWeek'] = pd.Categorical(df['PublishDayOfWeek'], categories=day_order, ordered=True)
 
+    plotly_config = {
+        # 替代 use_container_width=True
+        'use_container_width': True, 
+        # 隐藏 Plotly Logo
+        'displaylogo': False 
+    }
+
     # --- Plotting Logic (保持不变) ---
     # st.subheader("1. 每日更新频次")
     frequency_df = df.groupby(['PublishDateOnly', 'PublishDayOfWeek'], observed=True)['PublishDateTime'].count().reset_index()
@@ -140,7 +147,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
     frequency_df = frequency_df.sort_values('PublishDate')
     fig_freq = px.bar(frequency_df, x='PublishDate', y='UpdateCount', title='每日更新频次', labels={'UpdateCount': '更新频次', 'PublishDate': '日期', 'PublishDayOfWeek': '周几'}, hover_data=['PublishDayOfWeek'], height=500)
     fig_freq.update_xaxes(tickangle=-45, rangeslider_visible=True, rangeselector=dict(bgcolor="#333333", activecolor="#555555", font=dict(color="white"), buttons=[dict(count=7, label="1周", step="day", stepmode="backward"), dict(count=1, label="1月", step="month", stepmode="backward"), dict(count=3, label="1季", step="month", stepmode="backward"), dict(count=1, label="1年", step="year", stepmode="backward"), dict(step="all", label="全部")]), tickformat="%Y-%m-%d")
-    st.plotly_chart(fig_freq, width='stretch')
+    st.plotly_chart(fig_freq, config=plotly_config)
 
     # st.subheader("2. 更新活跃度分析")
     col1, col2 = st.columns(2)
@@ -148,7 +155,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         time_df_hour = df.groupby('PublishHour', observed=True)['PublishDateTime'].count().reset_index(name='UpdateCount')
         fig_hour = px.bar(time_df_hour, x='PublishHour', y='UpdateCount', title='更新活跃时段', labels={'PublishHour': '时刻', 'UpdateCount': '更新频次'}, height=400)
         fig_hour.update_layout(xaxis={'tickmode': 'linear', 'dtick': 1, 'range': [-0.5, 23.5]})
-        st.plotly_chart(fig_hour, width='stretch')
+        st.plotly_chart(fig_hour, config=plotly_config)
     with col2:
         hour_order = list(range(24))
         time_df_heatmap = df.groupby(['PublishHour', 'PublishDayOfWeek'], observed=True).size().reset_index(name='UpdateCount')
@@ -168,7 +175,7 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             ),
             coloraxis_colorbar_title_text='更新频次'  # 去掉 "sum of"
         )
-        st.plotly_chart(fig_heatmap, width='stretch')
+        st.plotly_chart(fig_heatmap, config=plotly_config)
 
 
     # 3. 原始数据表格 (仅限北京) 
