@@ -27,7 +27,7 @@ const CRON_TO_WORKFLOW = {
     },
     // =========================================================================
     // 4. scheduler.yml - TASK_3
-    "15,20,25,30,35,40,45,50,55 22-23,0-15 * * *": {
+    "15,25,35,45,55 22-23,0-15 * * *": {
         id: "scheduler.yml", 
         description: "High-Frequency Schedule (TASK_3)",
         input: { task_to_run: "TASK_3" } // 传入任务ID
