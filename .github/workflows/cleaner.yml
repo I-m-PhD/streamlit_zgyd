@@ -4,9 +4,6 @@ name: Remove Old Runs
 
 on:
   workflow_dispatch: # 允许手动运行
-  schedule:
-    # 每周日一次
-    - cron: '0 19 * * 6'
 
 permissions:
   contents: none

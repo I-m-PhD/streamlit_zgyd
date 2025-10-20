@@ -5,35 +5,31 @@
 // Cron 表达式已精确转换为 UTC 时间
 const CRON_TO_WORKFLOW = {
     // =========================================================================
-    // 1. cleaner.yml (每周清理)
-    // 表达式: 0 19 * * 7 (每周日 UTC 19:00)
+    // 1. cleaner.yml
     "0 19 * * 7": { 
         id: "cleaner.yml", 
         description: "Weekly Cleanup (cleaner.yml)",
         input: {} // 清理任务无需额外参数
     },
     // =========================================================================
-    // 2. scheduler.yml - TASK_1 (每日 06:00 CST 启动)
-    // 表达式: 0 22 * * * (每日 UTC 22:00)
+    // 2. scheduler.yml - TASK_1
     "0 22 * * *": { 
         id: "scheduler.yml", 
         description: "Daily Schedule (TASK_1)",
         input: { task_to_run: "TASK_1" } // 传入任务ID
     },
     // =========================================================================
-    // 3. scheduler.yml - TASK_2 (每 4 小时一次，比 T1 晚 10 分钟)
-    // 表达式: 10 2,6,10,14,18,22 * * * (UTC 02:10, 06:10, 10:10, 14:10, 18:10, 22:10)
+    // 3. scheduler.yml - TASK_2
     "10 2,6,10,14,18,22 * * *": { 
         id: "scheduler.yml", 
         description: "4-Hourly Schedule (TASK_2)",
         input: { task_to_run: "TASK_2" } // 传入任务ID
     },
     // =========================================================================
-    // 4. scheduler.yml - TASK_3 (每 30 分钟一次，比 T1 晚 15 分钟)
-    // 表达式: 15,45 0-15,22-23 * * * (UTC 0-15 & 22-23 小时，每小时 15/45 分)
-    "15,45 0-15,22-23 * * *": { 
+    // 4. scheduler.yml - TASK_3
+    "15,20,25,30,35,40,45,50,55 22-23,0-15 * * *": {
         id: "scheduler.yml", 
-        description: "Half-Hourly Schedule (TASK_3)",
+        description: "High-Frequency Schedule (TASK_3)",
         input: { task_to_run: "TASK_3" } // 传入任务ID
     }
 };
