@@ -162,14 +162,14 @@ def commit_new_state(new_data_list, file_path):
 
 def compare_data_and_generate_report(new_data, old_data):
     """对比新旧数据，返回新增和删除的列表"""
-    old_ids = {item['publishId'] for item in old_data if 'publishId' in item}
-    new_ids = {item['publishId'] for item in new_data if 'publishId' in item}
+    old_ids = {item['id'] for item in old_data if 'id' in item}
+    new_ids = {item['id'] for item in new_data if 'id' in item}
     
     added_ids = new_ids - old_ids
     removed_ids = old_ids - new_ids
     
-    new_data_map = {item['publishId']: item for item in new_data if 'publishId' in item}
-    old_data_map = {item['publishId']: item for item in old_data if 'publishId' in item}
+    new_data_map = {item['id']: item for item in new_data if 'id' in item}
+    old_data_map = {item['id']: item for item in old_data if 'id' in item}
     
     added_items = [new_data_map[id] for id in added_ids]
     removed_items = [old_data_map[id] for id in removed_ids]
