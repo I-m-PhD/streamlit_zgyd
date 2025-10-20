@@ -1,4 +1,4 @@
-# .github/workflows/cloudflare.yml
+# .github/workflows/worker.yml
 
 name: Deploy Worker
 
@@ -10,7 +10,7 @@ on:
       - 'worker/**'     # 监控 Worker 脚本文件夹, Worker 的核心逻辑代码
       - 'wrangler.toml' # 监控 Worker 配置文件, 包含 Worker 的 Cron 表达式
       - 'package.json'  # 监控 package.json 文件, 包含 Wrangler CLI 的版本
-      - '.github/workflows/cloudflare.yml'  # 监控工作流文件本身
+      - '.github/workflows/worker.yml'  # 监控工作流文件本身
   workflow_dispatch:    # 允许手动触发部署
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
           # 安全注入 Worker 运行时的 Secrets
           secrets: |
             CLOUDFLARE_WORKER
-
+          
         # 引入 env 块，强制确保该值在 Action 步骤环境中可用
         env:
           CLOUDFLARE_WORKER: ${{ secrets.CLOUDFLARE_WORKER }}
