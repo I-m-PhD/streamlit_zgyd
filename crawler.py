@@ -4,7 +4,6 @@ import random, requests, ssl, time, json, os, sys
 from requests.adapters import HTTPAdapter
 from datetime import datetime
 import pytz
-from github import Github, InputGitAuthor, UnknownObjectException
 
 # --- CONFIGURATION ---
 BASE_URL = 'https://b2b.10086.cn'
@@ -33,6 +32,7 @@ USER_AGENTS = [
     "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E; LBBROWSER)",
 ] * 10
 
+
 def get_random_headers():
     return {
         'User-Agent': random.choice(USER_AGENTS),
@@ -42,6 +42,7 @@ def get_random_headers():
         'Referer': f'{BASE_URL}/',
     }
 
+
 class CustomHttpAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
         context = ssl.create_default_context()
@@ -49,6 +50,7 @@ class CustomHttpAdapter(HTTPAdapter):
         context.check_hostname = False
         kwargs['ssl_context'] = context
         return super(CustomHttpAdapter, self).init_poolmanager(*args, **kwargs)
+
 
 def load_metadata():
     if os.path.exists(METADATA_PATH):
@@ -59,10 +61,12 @@ def load_metadata():
             return {}
     return {}
 
+
 def save_metadata(metadata):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     with open(METADATA_PATH, 'w', encoding='utf-8') as f:
         json.dump(metadata, f, indent=4, ensure_ascii=False)
+
 
 # --- Server Chan Push and GitHub State Management ---
 
@@ -75,6 +79,7 @@ def parse_server_chan_urls(urls_string):
         return []
     # 使用分号分隔，并去除每个 URL 两边的空白
     return [url.strip() for url in urls_string.split(';') if url.strip()]
+
 
 def send_server_chan_notification(server_chan_urls_list, content_md):
     """
@@ -113,61 +118,27 @@ def send_server_chan_notification(server_chan_urls_list, content_md):
         except requests.exceptions.RequestException as e:
             print(f"[-] 接收者 #{i+1} 网络请求失败: {e}")
 
-def setup_github(repo_full_name, github_pat):
-    """
-    初始化 GitHub 客户端并获取仓库实例。
-    
-    Args:
-        repo_full_name (str): 仓库的全名 (owner/repo)。
-        github_pat (str): GitHub 个人访问令牌 (PAT)。
 
-    Returns:
-        github.Repository.Repository: GitHub 仓库实例。
-    """
-    
-    # 核心修改：直接使用传入的参数
-    pat_token = github_pat
-    
-    if not pat_token:
-        print("[-] FATAL ERROR: CLOUDFLARE_WORKER / GITHUB_PAT 变量为空，PyGithub 初始化失败！")
-        return None
-    
-    # 打印长度以确认是否读取到 Secret
-    stripped_token = pat_token.strip()
-    print(f"[+] CLOUDFLARE_WORKER Token 已读取，长度为: {len(stripped_token)}")
-    
+def get_old_data_from_repo(file_path):
+    """从本地文件系统获取上一次保存的状态数据 (由 git checkout 提供)"""
+    if not os.path.exists(file_path):
+        print(f"[*] 状态文件 {file_path} 在本地不存在，视为初始运行。")
+        return []
     try:
-        # 1. 认证客户端
-        g = Github(stripped_token) 
-        
-        # 验证认证是否成功（通过获取用户）
-        user = g.get_user()
-        print(f"[+] PyGithub 客户端初始化成功并验证通过。当前用户: {user.login}")
-
-        # 2. 获取仓库实例 (这是之前缺失的关键步骤)
-        # 这一步使用传入的 repo_full_name
-        repo = g.get_repo(repo_full_name) 
-        print(f"[+] 成功获取仓库实例: {repo_full_name}")
-        
-        # 3. 返回仓库实例
-        return repo
-        
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            # 处理空文件的情况
+            if not content:
+                print(f"[*] 状态文件 {file_path} 为空，视为初始运行。")
+                return []
+            return json.loads(content)
     except Exception as e:
-        print(f"[-] FATAL ERROR: PyGithub 认证或获取仓库失败，请检查 Token/Repo名称。错误信息: {e}")
-        return None
-
-def get_old_data_from_repo(repo, file_path):
-    """从 GitHub 仓库获取上一次保存的状态数据"""
-    try:
-        contents = repo.get_contents(file_path)
-        content = contents.decoded_content.decode('utf-8')
-        return json.loads(content)
-    except Exception:
-        # 如果文件不存在，返回空列表作为初始状态
-        print(f"[*] 状态文件 {file_path} 不存在或读取失败，视为初始运行。")
+        # 如果文件存在但无法解析
+        print(f"[-] 状态文件 {file_path} 读取或解析失败，视为初始运行。错误: {e}")
         return []
 
-def commit_new_state(repo, new_data_list, file_path):
+
+def commit_new_state(new_data_list, file_path):
     """
     将新数据写入本地状态文件，供 git-auto-commit-action 统一提交。
     (注意：此函数仅写入本地文件，不再通过 PyGithub API 远程提交，以避免与 Actions 冲突)
@@ -188,6 +159,7 @@ def commit_new_state(repo, new_data_list, file_path):
         print(f"[-] FATAL ERROR: 写入本地状态文件 {file_path} 失败！错误信息: {e}")
         # 如果本地写入失败，则后续的 git-auto-commit-action 将无法提交此文件
 
+
 def compare_data_and_generate_report(new_data, old_data):
     """对比新旧数据，返回新增和删除的列表"""
     old_ids = {item['publishId'] for item in old_data if 'publishId' in item}
@@ -203,6 +175,7 @@ def compare_data_and_generate_report(new_data, old_data):
     removed_items = [old_data_map[id] for id in removed_ids]
     
     return added_items, removed_items
+
 
 def format_markdown_report(added_items, removed_items):
     """格式化 Server 酱的 Markdown 内容，包含项目名称、日期和新格式链接"""
@@ -252,6 +225,7 @@ def format_markdown_report(added_items, removed_items):
     report_content += f"\n---\n[查看完整运行日志]({run_url})"
     
     return report_content
+
 
 # --- MAIN CRAWLER LOGIC ---
 
@@ -319,8 +293,10 @@ def scrape_content(payload_override, output_name):
         print(f"[{output_name}] 抓取失败或无记录。")
         return all_content, False
 
+
 # 定义时区常量
 CST_TZ = pytz.timezone('Asia/Shanghai')
+
 
 def run_crawler_job(task_key):
     if task_key not in TASK_CONFIG:
@@ -344,51 +320,34 @@ def run_crawler_job(task_key):
     # --- 核心逻辑分支：TASK_3 的差异化推送与状态管理 ---
     if task_key == "TASK_3":
         
-        GITHUB_PAT = os.environ.get("CLOUDFLARE_WORKER")
+        # 1. 获取旧数据 (从本地文件)
+        #    (该文件由上一次 Action 运行时的 git-auto-commit 提交)
+        old_data = get_old_data_from_repo(TASK_3_STATE_PATH)
         
-        # 从环境变量获取原始 URL 字符串
-        server_chan_urls_str = os.environ.get("WECHAT_WEBHOOK_URL")
+        # 2. 对比数据
+        added_items, removed_items = compare_data_and_generate_report(new_data, old_data)
         
-        # 解析 URL 字符串为列表
-        server_chan_url_list = parse_server_chan_urls(server_chan_urls_str)
-        
-        # 从 wrangler.toml 注入的 Env Vars (通过 scheduler.yml)
-        REPO_OWNER = os.environ.get("GITHUB_OWNER")
-        REPO_NAME = os.environ.get("GITHUB_REPO")
-        
-        # 现在只需要检查 GITHUB_PAT 和 URL 列表是否为空
-        if not GITHUB_PAT or not server_chan_url_list:
-            print("TASK_3 缺少推送所需的 Secrets (GITHUB_PAT) 或 WECHAT_WEBHOOK_URL。跳过推送。")
-            # 即使缺少 Secrets，仍允许保存本地文件供 Streamlit 使用
-            pass
-        else:
-            repo_full_name = f"{REPO_OWNER}/{REPO_NAME}"
-            repo = setup_github(repo_full_name, GITHUB_PAT)
-            if not repo:
-                print("GitHub 仓库连接失败，跳过差异推送。")
+        # 3. 报告并推送 (仅在有变动时)
+        if added_items or removed_items:
+            print(f"发现变动：新增 {len(added_items)} 条, 删除 {len(removed_items)} 条。")
+
+            # 检查 Server Chan URL 是否存在
+            server_chan_urls_str = os.environ.get("WECHAT_WEBHOOK_URL")
+            server_chan_url_list = parse_server_chan_urls(server_chan_urls_str)
+
+            if not server_chan_url_list:
+                print("[-] 环境变量 WECHAT_WEBHOOK_URL 为空，跳过 Server Chan 推送。")
             else:
-                # 1. 获取旧数据 (从仓库)
-                old_data = get_old_data_from_repo(repo, TASK_3_STATE_PATH)
-                
-                # 2. 对比数据
-                added_items, removed_items = compare_data_and_generate_report(new_data, old_data)
-                
-                # 3. 报告并推送 (仅在有变动时)
-                if added_items or removed_items:
-                    print(f"发现变动：新增 {len(added_items)} 条, 删除 {len(removed_items)} 条。")
-                    
-                    # 生成 Markdown 报告
-                    report_content = format_markdown_report(added_items, removed_items)
+                # 生成 Markdown 报告
+                report_content = format_markdown_report(added_items, removed_items)
+                # 调用推送函数
+                send_server_chan_notification(server_chan_url_list, report_content)
 
-                    # 调用新的推送函数，传入 URL 列表
-                    send_server_chan_notification(server_chan_url_list, report_content)
-
-                    # 4. 提交新状态数据 (覆盖旧状态文件) - 使用 PyGithub
-                    commit_new_state(repo, new_data, TASK_3_STATE_PATH)
-                    
-                else:
-                    print("数据无变化，跳过推送和状态更新。")
-
+            # 4. 提交新状态数据 (写入本地文件，由 git-auto-commit-action 提交)
+            commit_new_state(new_data, TASK_3_STATE_PATH)
+            
+        else:
+            print("数据无变化，跳过推送和状态更新。")
 
     # --- 通用逻辑：写入本地 JSON 文件 (供 Streamlit 读取) ---
     # TASK_3 的数据写入本地文件，Task 1/2/3 都需要写入，由 git-auto-commit-action 统一提交
@@ -407,6 +366,7 @@ def run_crawler_job(task_key):
     metadata[task_name] = now_cst.strftime("%Y-%m-%d %H:%M:%S")
     save_metadata(metadata)
     print(f"元数据已更新。")
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
