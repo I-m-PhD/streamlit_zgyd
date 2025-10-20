@@ -184,7 +184,7 @@ def format_markdown_report(added_items, removed_items):
     
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    report_content = f"## 所有招采_正在招标_北京 数据变动报告\n"
+    report_content = f"## 所有招采->正在招标->北京\n"
     report_content += f"**时间：** {now_str}\n"
     report_content += f"**总计记录：** {len(added_items) + len(removed_items)} 条变动\n\n"
     
