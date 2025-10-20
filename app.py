@@ -238,11 +238,8 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
             use_container_width=True, 
             height=600,
             column_config={
-                # 保持最简 LinkColumn 配置，避免 v1.50.0 的 TypeError Bug
                 "链接": st.column_config.LinkColumn(
-                    # 设定列宽
-                    width="small", 
-                    # 显式添加一个 help 文本，以确保 LinkColumn 实例被创建和应用
+                    width=40, 
                     help="点击查看项目详情链接",
                     display_text=":material/open_in_new:"
                 )
