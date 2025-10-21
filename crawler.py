@@ -78,6 +78,7 @@ def parse_server_chan_urls(urls_string):
     if not urls_string:
         return []
     # 使用分号分隔，并去除每个 URL 两边的空白
+    # https://sctapi.ftqq.com/****************.send
     return [url.strip() for url in urls_string.split(';') if url.strip()]
 
 
