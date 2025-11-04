@@ -14,6 +14,7 @@ on:
           - TASK_1
           - TASK_2
           - TASK_3
+          - TASK_4
 
 permissions:
   contents: write # 授予写入权限用于提交数据 (用于 PyGithub commit 和 git-auto-commit-action)
@@ -45,42 +46,43 @@ jobs:
         with:
           task_name: TASK_2
 
-  # T3: 任务 3 Job 定义 (重构为差异化推送)
-  run_task_3:
-    name: "TASK 3: 所有招采_正在招标_北京"
+  # T3: 统一处理 TASK 3 和 TASK 4 的差异化推送与状态管理
+  run_task_diff_push:
+    name: "TASK ${{ github.event.inputs.task_to_run }}: 差异化推送与状态管理"
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.task_to_run == 'TASK_3'
+    # 捕获 TASK_3 或 TASK_4
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.task_to_run == 'TASK_3' || github.event.inputs.task_to_run == 'TASK_4')
       
     steps:
-      - name: Checkout code (Fetch Full History for PyGithub)
+      - name: Checkout code (Fetch Full History for State Management)
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0 # 允许 PyGithub 获取旧状态并提交新状态
+          fetch-depth: 0 # 必须获取全部历史以供 crawler.py 读取旧状态文件
 
       - name: Setup Python and Install dependencies
         # 重用 sop Action 的 Python 设置和依赖安装步骤
-        # 只执行 setup-python 和 pip install -r requirements.txt
         uses: ./.github/actions/sop
         with:
-          task_name: DUMMY # 传递一个虚拟任务名以满足输入要求，但不会执行其最终的 git-auto-commit
+          # 传递一个虚拟任务名以满足输入要求，但只执行 setup 和 install 步骤
+          task_name: DUMMY 
 
-      - name: Run Crawler, Compare, and Push (TASK 3)
+      - name: Run Crawler, Compare, and Push (TASK ${{ github.event.inputs.task_to_run }})
         shell: bash
-        run: python crawler.py TASK_3
+        # 运行爬虫，将任务键作为参数传入
+        run: python crawler.py ${{ github.event.inputs.task_to_run }}
         env:
           # 注入 Secrets 供 crawler.py 访问
-          CLOUDFLARE_WORKER: ${{ secrets.CLOUDFLARE_WORKER }} # GitHub PAT
           WECHAT_WEBHOOK_URL: ${{ secrets.WECHAT_WEBHOOK_URL }} # Server Chan API URL
           GITHUB_OWNER: ${{ github.repository_owner }} 
           GITHUB_REPO: ${{ github.event.repository.name }}
 
-      - name: Commit and Push Local Data Files (for Streamlit)
-        # 提交 Streamlit 需要的 zgyd 目录文件。
-        # 现在 task_3_state.json 也是在本地创建的，必须明确包含在提交模式中。
+      - name: Commit and Push Local Data Files (Streamlit and State)
+        # 提交所有必要的 JSON 文件，包括 TASK 3 和 TASK 4 的状态文件
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "SCHEDULER: Auto-update data [TASK_3] for Streamlit."
-          file_pattern: 'zgyd/*.json zgyd/metadata.json zgyd/task_3_state.json'
+          commit_message: "SCHEDULER: Auto-update data [${{ github.event.inputs.task_to_run }}] for Streamlit/State."
+          # 提交模式只需要匹配 zgyd/*.json 和 zgyd/metadata.json 即可，因为状态文件也符合 zgyd/*.json 模式
+          file_pattern: 'zgyd/*.json zgyd/metadata.json' 
           commit_user_name: 'github-actions[bot]'
           commit_user_email: 'github-actions[bot]@users.noreply.github.com'
           push_options: '--force-with-lease'

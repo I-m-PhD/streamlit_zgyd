@@ -16,6 +16,7 @@ TASK_CONFIG = {
     "TASK_1": {"payload": {}, "name": "所有招采"},
     "TASK_2": {"payload": {"homePageQueryType": "Bidding"}, "name": "所有招采_正在招标"},
     "TASK_3": {"payload": {"homePageQueryType": "Bidding", "companyType": "BJ"}, "name": "所有招采_正在招标_北京"},
+    "TASK_4": {"payload": {"companyType": "BJ", "publishOneType": "PURCHASE_OPINION", "publishType": "PURCHASE_SERVICE"}, "name": "采购意见征求公告_北京"},
 }
 
 # 任务对应的动态更新计划描述
@@ -23,6 +24,7 @@ TASK_UPDATE_SCHEDULES = {
     "TASK_1": "每日 06:00 更新",
     "TASK_2": "每日 02:10, 06:10, 10:10, 14:10, 18:10, 22:10 更新",
     "TASK_3": "每日 06:00-23:59 每时 15, 25, 35, 45, 55 分更新",
+    "TASK_4": "每日 06:00-23:59 每时 15, 25, 35, 45, 55 分更新",
 }
 
 
@@ -176,8 +178,9 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         st.plotly_chart(fig_heatmap, config=plotly_config)
 
 
-    # 3. 原始数据表格 (仅限北京) 
-    if data_name == "所有招采_正在招标_北京":
+    # 3. 原始数据表格 (仅限 TASK_3 和 TASK_4) 
+    # 仅在 task_key 为 TASK_3 或 TASK_4 时显示数据表
+    if task_key in ["TASK_3", "TASK_4"]:
         # st.subheader("3. 原始数据表")
 
         # 1. 定义 BASE_URL 
@@ -212,15 +215,35 @@ def show_statistics(all_content, data_name, crawl_time, task_key):
         # 应用新的构建函数
         df['LINK'] = df.apply(build_link_safely, axis=1)
 
-        required_cols_map = {
-            'companyTypeName': '单位',
-            'name': '标题',
-            'LINK': '链接',
-            'publishDate': '发布时间',
-            'tenderSaleDeadline': '文件售卖截止时间',
-            'publicityEndTime': '公示截止时间',
-            'backDate': '截标时间'
-        }
+        # required_cols_map = {
+        #     'companyTypeName': '单位',
+        #     'name': '标题',
+        #     'LINK': '链接',
+        #     'publishDate': '发布时间',
+        #     'tenderSaleDeadline': '文件售卖截止时间',
+        #     'publicityEndTime': '公示截止时间',
+        #     'backDate': '截标时间'
+        # }
+        # 根据 task_key 动态调整显示的列
+        if task_key == "TASK_3":
+            # TASK_3 显示所有截止时间
+            required_cols_map = {
+                'companyTypeName': '单位',
+                'name': '标题',
+                'LINK': '链接',
+                'publishDate': '发布时间',
+                'tenderSaleDeadline': '文件售卖截止时间',
+                'publicityEndTime': '公示截止时间',
+                'backDate': '截标时间'
+            }
+        else: # task_key == "TASK_4" (采购意向)
+            # TASK_4 只显示基本信息
+            required_cols_map = {
+                'companyTypeName': '单位',
+                'name': '标题',
+                'LINK': '链接',
+                'publishDate': '发布时间',
+            }
 
         # 合并所有必要的列
         all_required_keys = list(required_cols_map.keys())
@@ -280,8 +303,10 @@ def main():
     task_keys = list(TASK_CONFIG.keys())
     tab_names = [TASK_CONFIG[key]["name"] for key in task_keys]
 
-    # 获取第三个 Tab 的名称
-    default_tab_name = tab_names[2] # 索引 2 对应第三个 Tab
+    # # 获取第三个 Tab 的名称
+    # default_tab_name = tab_names[2] # 索引 2 对应第三个 Tab
+    # 获取 TASK_4 的索引，并将其设置为默认 Tab
+    default_tab_name = tab_names[3] # 索引 3 对应 TASK_4
     
     # 创建 Streamlit Tabs
     tabs = st.tabs(tab_names, default=default_tab_name)

@@ -30,6 +30,13 @@ const CRON_TO_WORKFLOW = {
         id: "scheduler.yml", 
         description: "High-Frequency Schedule (TASK_3)",
         input: { task_to_run: "TASK_3" } // 传入任务ID
+    },
+    // =========================================================================
+    // 5. scheduler.yml - TASK_4
+    "17,27,37,47,57 22-23,0-15 * * *": { // 使用了与 TASK_3 不同的分钟数
+        id: "scheduler.yml", 
+        description: "High-Frequency Schedule (TASK_4)",
+        input: { task_to_run: "TASK_4" } // 传入任务ID
     }
 };
 

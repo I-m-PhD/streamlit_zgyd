@@ -11,12 +11,14 @@ POST_URL = f'{BASE_URL}/api-b2b/api-sync-es/white_list_api/b2b/publish/queryList
 OUTPUT_DIR = "./zgyd"
 METADATA_PATH = os.path.join(OUTPUT_DIR, "metadata.json")
 TASK_3_STATE_PATH = os.path.join(OUTPUT_DIR, "task_3_state.json")  # 状态文件路径：用于 TASK 3 的差异对比
+TASK_4_STATE_PATH = os.path.join(OUTPUT_DIR, "task_4_state.json")  # 状态文件路径：用于 TASK 4 的差异对比
 
 # 定义所有需要采集的任务配置
 TASK_CONFIG = {
     "TASK_1": {"payload": {}, "name": "所有招采"},
     "TASK_2": {"payload": {"homePageQueryType": "Bidding"}, "name": "所有招采_正在招标"},
     "TASK_3": {"payload": {"homePageQueryType": "Bidding", "companyType": "BJ"}, "name": "所有招采_正在招标_北京"},
+    "TASK_4": {"payload": {"companyType": "BJ", "publishOneType": "PURCHASE_OPINION", "publishType": "PURCHASE_SERVICE"}, "name": "采购意见征求公告_北京"},
 }
 
 # --- UTILITIES (Headers, Adapter, Metadata) ---
@@ -95,7 +97,7 @@ def send_server_chan_notification(server_chan_urls_list, content_md):
         return
 
     payload = {
-        "title": "北京开标数据更新",
+        "title": "北京 开标数据+意见征求公告 更新",
         # Server 酱的内容字段是 'desp'
         "desp": content_md 
     }
@@ -178,14 +180,15 @@ def compare_data_and_generate_report(new_data, old_data):
     return added_items, removed_items
 
 
-def format_markdown_report(added_items, removed_items):
+def format_markdown_report(added_items, removed_items, task_name):
     """格式化 Server 酱的 Markdown 内容，包含项目名称、日期和新格式链接"""
     # 确保 BASE_URL 在此作用域内可用，因为它在文件顶部是全局定义的
     global BASE_URL
     
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    report_content = f"## 所有招采->正在招标->北京\n"
+    # report_content = f"## 所有招采->正在招标->北京\n"
+    report_content = f"## {task_name}\n"
     report_content += f"**时间：** {now_str}\n"
     report_content += f"**总计记录：** {len(added_items) + len(removed_items)} 条变动\n\n"
     
@@ -204,9 +207,19 @@ def format_markdown_report(added_items, removed_items):
         item_md = ""
         item_md += f"> - **标题:** {item.get('name', 'N/A')}\n"
         item_md += f"> - **发布时间:** {item.get('publishDate', 'N/A')}\n"
-        item_md += f"> - **文件售卖截止时间:** {item.get('tenderSaleDeadline', 'N/A')}\n"
-        item_md += f"> - **公示截止时间:** {item.get('publicityEndTime', 'N/A')}\n"
-        item_md += f"> - **截标时间:** {item.get('backDate', 'N/A')}\n"
+
+        # item_md += f"> - **文件售卖截止时间:** {item.get('tenderSaleDeadline', 'N/A')}\n"
+        # item_md += f"> - **公示截止时间:** {item.get('publicityEndTime', 'N/A')}\n"
+        # item_md += f"> - **截标时间:** {item.get('backDate', 'N/A')}\n"
+        # 根据任务类型，显示不同的截止时间
+        if task_name == "所有招采_正在招标_北京":
+            item_md += f"> - **文件售卖截止时间:** {item.get('tenderSaleDeadline', 'N/A')}\n"
+            item_md += f"> - **公示截止时间:** {item.get('publicityEndTime', 'N/A')}\n"
+            item_md += f"> - **截标时间:** {item.get('backDate', 'N/A')}\n"
+        elif task_name == "采购意见征求公告_北京":
+            # TASK_4 意向数据可能没有这些字段，保留通用性
+            pass
+
         # 链接文本统一为“点击查看”
         item_md += f"> - **详情链接:** [点击查看]({link})\n\n"
         return item_md
@@ -232,9 +245,14 @@ def format_markdown_report(added_items, removed_items):
 
 def scrape_content(payload_override, output_name):
     """执行抓取操作，返回抓取到的所有数据和成功状态。"""
+    # base_payload = {
+    #     "size": 100, "current": 1, "companyType": "", "name": "",
+    #     "publishType": "PROCUREMENT", "publishOneType": "PROCUREMENT",
+    #     "homePageQueryType": "", "sfactApplColumn5": "PC"
+    # }
+    # 移除 publishType 和 publishOneType 的默认值，因为它们将在 payload_override 中设置
     base_payload = {
         "size": 100, "current": 1, "companyType": "", "name": "",
-        "publishType": "PROCUREMENT", "publishOneType": "PROCUREMENT",
         "homePageQueryType": "", "sfactApplColumn5": "PC"
     }
 
@@ -318,12 +336,19 @@ def run_crawler_job(task_key):
         print("抓取失败，跳过文件保存和元数据更新。")
         return
 
-    # --- 核心逻辑分支：TASK_3 的差异化推送与状态管理 ---
+    # --- 核心逻辑分支：TASK_3 或 TASK_4 的差异化推送与状态管理 ---
+    state_path = None
+    
+    # 统一处理 TASK_3 和 TASK_4 的差异化逻辑
     if task_key == "TASK_3":
+        state_path = TASK_3_STATE_PATH
+    elif task_key == "TASK_4":
+        state_path = TASK_4_STATE_PATH
+        
+    if state_path:
         
         # 1. 获取旧数据 (从本地文件)
-        #    (该文件由上一次 Action 运行时的 git-auto-commit 提交)
-        old_data = get_old_data_from_repo(TASK_3_STATE_PATH)
+        old_data = get_old_data_from_repo(state_path)
         
         # 2. 对比数据
         added_items, removed_items = compare_data_and_generate_report(new_data, old_data)
@@ -339,22 +364,21 @@ def run_crawler_job(task_key):
             if not server_chan_url_list:
                 print("[-] 环境变量 WECHAT_WEBHOOK_URL 为空，跳过 Server Chan 推送。")
             else:
-                # 生成 Markdown 报告
-                report_content = format_markdown_report(added_items, removed_items)
+                # 生成 Markdown 报告 (传入 task_name 以便格式化)
+                report_content = format_markdown_report(added_items, removed_items, task_name)
                 # 调用推送函数
                 send_server_chan_notification(server_chan_url_list, report_content)
 
             # 4. 提交新状态数据 (写入本地文件，由 git-auto-commit-action 提交)
-            commit_new_state(new_data, TASK_3_STATE_PATH)
+            commit_new_state(new_data, state_path)
             
         else:
             print("数据无变化，跳过推送和状态更新。")
 
     # --- 通用逻辑：写入本地 JSON 文件 (供 Streamlit 读取) ---
-    # TASK_3 的数据写入本地文件，Task 1/2/3 都需要写入，由 git-auto-commit-action 统一提交
     try:
         os.makedirs(OUTPUT_DIR, exist_ok=True)
-        # TASK_3 写入 zgyd/所有招采_正在招标_北京.json
+        # 写入任务对应的 JSON 文件
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(new_data, f, indent=4, ensure_ascii=False)
         print(f"已将新数据写入本地文件: {output_path}")
