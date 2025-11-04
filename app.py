@@ -303,10 +303,8 @@ def main():
     task_keys = list(TASK_CONFIG.keys())
     tab_names = [TASK_CONFIG[key]["name"] for key in task_keys]
 
-    # # 获取第三个 Tab 的名称
-    # default_tab_name = tab_names[2] # 索引 2 对应第三个 Tab
-    # 获取 TASK_4 的索引，并将其设置为默认 Tab
-    default_tab_name = tab_names[3] # 索引 3 对应 TASK_4
+    # # 获取第 4 个 Tab 的名称
+    default_tab_name = tab_names[2] # 索引 2 对应第三个 Tab
     
     # 创建 Streamlit Tabs
     tabs = st.tabs(tab_names, default=default_tab_name)
