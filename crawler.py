@@ -95,31 +95,83 @@ def send_server_chan_notification(server_chan_urls_list, content_md):
     if not server_chan_urls_list:
         print("[-] Server Chan URL 列表为空，跳过推送。")
         return
-
-    payload = {
-        "title": "北京 开标数据+意见征求公告 更新",
-        # Server 酱的内容字段是 'desp'
-        "desp": content_md 
-    }
+    
+    # 通用推送标题（用于 Server 酱的 title 字段）
+    common_title = "北京 挂网招标+意见征求公告 更新"
     
     # 遍历所有 URL 并逐个发送
     for i, url in enumerate(server_chan_urls_list):
-        # 截断 URL 以保护隐私，仅打印开头部分
-        display_url = url[:40] + "..." if len(url) > 40 else url
-        print(f"[*] 正在尝试推送至接收者 #{i+1} ({display_url})...")
         
+        # 1. 动态构造 Payload 并识别客户端类型
+        client_name = "未知平台"
+        payload = None
+        
+        # 识别企业微信 Webhook (URL 包含 qyapi.weixin.qq.com)
+        if "qyapi.weixin.qq.com" in url:
+            # 企业微信 Webhook (文档要求: msgtype: markdown, content在 markdown object内)
+            payload = {
+                "msgtype": "markdown",
+                "markdown": {
+                    "content": content_md
+                }
+            }
+            client_name = "企业微信"
+            
+        # 识别 Server Chan Webhook (URL 包含 sctapi.ftqq.com)
+        elif "sctapi.ftqq.com" in url:
+            # Server 酱 Webhook (文档要求: title 和 desp 字段)
+            payload = {
+                "title": common_title, 
+                "desp": content_md 
+            }
+            client_name = "Server 酱"
+            
+        else:
+            display_url = url[:40] + "..." if len(url) > 40 else url
+            print(f"[-] 接收者 #{i+1}: URL 格式无法识别 ({display_url})，跳过推送。")
+            continue
+
+        # 2. 发送请求 (使用 json=payload 确保发送 Content-Type: application/json)
         try:
-            response = requests.post(url, data=payload, timeout=10)
+            display_url = url[:40] + "..." if len(url) > 40 else url
+            print(f"[*] 正在尝试推送至接收者 #{i+1} ({client_name})...")
+            
+            # 使用 json=payload 确保正确发送 JSON 数据
+            # 注意: 即使原始代码中使用的是 data=payload，这里也应该改为 json=payload，以确保Content-Type: application/json头下发送正确格式的JSON体。
+            session = requests.Session()
+            # 这里的 headers 已经在全局的 get_random_headers() 中设置了 Content-Type: application/json
+            response = session.post(url, json=payload, timeout=10) 
             response.raise_for_status()
             
             result = response.json()
-            if result.get("code") == 0:
-                print(f"[+] 接收者 #{i+1} 推送成功。")
+            
+            # 3. 检查不同平台的成功标志
+            success = False
+            message = ""
+            
+            if client_name == "企业微信":
+                # 企业微信成功标志: errcode: 0
+                if result.get("errcode") == 0:
+                    success = True
+                else:
+                    message = f"错误码: {result.get('errcode', 'N/A')}, 错误信息: {result.get('errmsg', '未知')}"
+                    
+            elif client_name == "Server 酱":
+                # Server 酱成功标志: code: 0
+                if result.get("code") == 0:
+                    success = True
+                else:
+                    message = f"错误码: {result.get('code', 'N/A')}, 错误信息: {result.get('message', '未知')}"
+            
+            if success:
+                print(f"[+] 接收者 #{i+1} ({client_name}) 推送成功。")
             else:
-                print(f"[-] 接收者 #{i+1} 推送失败，错误信息: {result.get('message')}")
+                print(f"[-] 接收者 #{i+1} ({client_name}) 推送失败，详细信息: {message}")
                 
         except requests.exceptions.RequestException as e:
-            print(f"[-] 接收者 #{i+1} 网络请求失败: {e}")
+            print(f"[-] 接收者 #{i+1} ({client_name}) 网络请求失败: {e}")
+        except json.JSONDecodeError:
+            print(f"[-] 接收者 #{i+1} ({client_name}) 响应不是有效 JSON。")
 
 
 def get_old_data_from_repo(file_path):
